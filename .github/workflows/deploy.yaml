@@ -1,0 +1,23 @@
+on: [push]
+name: Azure ARM
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@main
+
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - uses: azure/arm-deploy@v1
+      with:
+        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION }}
+        resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP }}
+        template: bicep/main.bicep
+        parameters: >
+          userObjectId=${{ secrets.BICEP_USER }}
+          spObjectId=${{ secrets.BICEP_SERVICE_PRINCIPAL }}
+          sshPrivateKey="${{ secrets.SSH_PRIVATE_KEY }}"
+          sshPublicKey="${{ secrets.SSH_PUBLIC_KEY }}"
+        failOnStdErr: false
