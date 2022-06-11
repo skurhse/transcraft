@@ -1,6 +1,6 @@
 # transcraft
 
-A transgender minecraft server.
+A transgender minecraft server. ⛏
 
 ## Tooling
 
