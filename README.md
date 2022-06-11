@@ -2,7 +2,7 @@
 
 A transgender minecraft server. ⛏
 
-## Getting started
+## Getting Started
 
 ```sh
 gh repo clone transprogrammer/transcraft
