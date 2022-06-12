@@ -4,6 +4,7 @@ A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solu
 
 ## Programs
 - [azure-cli](https://github.com/Azure/azure-cli)
+- [curl](https://github.com/curl/curl)
 - [bash](https://git.savannah.gnu.org/cgit/bash.git/)
 - [cloud-init](https://github.com/canonical/cloud-init)
 - [coreutils](https://git.savannah.gnu.org/cgit/coreutils.git/)

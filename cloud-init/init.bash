@@ -6,47 +6,125 @@ set -Cefuxo pipefail
 
 arch=$(arch)
 
+bin=/usr/local/bin
+src=/usr/local/src
 
-export ARCH=amd64
-export NODE_EXPORTER_VERSION=1.3.1
-export MINECRAFT_EXPORTER_VERSION=0.11.2
-export PROM_VERSION=2.33.0
+declare -A versions=(
+  [minecraft_exporter]=0.11.2
+  [node_exporter]=1.3.1
+  [paper]=''
+  [prometheus]=2.36.1
+)
 
-git
-iptables -I INPUT -j ACCEPT
+declare -A prometheus=(
+  [git]=https://github.com/prometheus/prometheus
+  [release]=prometheus-${versions[prometheus]}.linux-$arch
+  [checksum]=e5e555c84f04ccf20821fe907088e7ccecf418c88be3bd552b07c774d448d339
+  [etc]=/etc/prometheus
+  [lib]=/var/lib/prometheus
+  [owner]=prometheus
+  [group]=prometheus
+  [unit]=prometheus
+)
+prometheus[url]=${prometheus[git]}/releases/download/v${versions[prometheus]}/${prometheus[release]}.tar.gz
+
+prometheus_programs=(prometheus promtool)
+prometheus_configs=(consoles/ console_libraries/ prometheus.yml)
+
+declare -A node_exporter=(
+  [git]=https://github.com/prometheus/node_exporter
+  [release]=node_exporter-${versions[node_exporter]}.linux-$arch
+  [owner]=node_exporter
+  [group]=node_exporter
+  [unit]=node_exporter
+)
+node_exporter[url]=${node_exporter[git]}/releases/download/v${versions[node_exporter]}/${node_exporter[release]}.tar.gz
+
+exporters=(node minecraft)
+
+main() {
+  cd /tmp
+  mkdir cloud-init
+  cd $_
+
+  configure_iptables
+  
+  install_prometheus
+  
+  for exporter in ${exporters[@]}
+  do
+    install_exporter $exporter
+  done
+
+ install_paper
+}
+
+configure_iptables() {
+  iptables -I INPUT -j ACCEPT
+}
+
+install_prometheus() {
+  declare -n service=prometheus
+  declare -n programs=prometheus_programs
+  declare -n configs=prometheus_configs
+
+  mkdir ${service[etc]} mkdir ${service[lib]}
+
+  install_to_source
+
+  pushd $src
+  for $entity in ${programs[@]} ${configs[@]} ${p[lib]}; do
+    install_to_bin
+  done
+  popd
+
+  handle_systemctl
+}
+
+install_exporter() {
+  declare -n p=$1_exporter
+
+  install_to_source
+  curl -LSfs {$e[url]} | tar x -C $src
+  pushd $src
+  
+  program=
+  cp ${e[release]} $bin 
+
+  handle_systemctl ${e[unit]}
+}
+
+install_to_source() {
+  wget ${p[url]} | tar x -C $src
+}
+
+install_to_bin() {
+    declare e=$entity
+
+    cp -r ${p[release]}/$e $bin
+    chown -R ${p[owner]}:${p[group]} $bin/$element
+
+    cp -r ${p[release]}/$e ${p[etc]} 
+    chown -R ${p[owner]}:${p[group]} ${p[etc]}/$e
+}
 
 
-
-mkdir /etc/prometheus
-mkdir /var/lib/prometheus
-
-curl -sSL https://github.com/prometheus/prometheus/releases/download/v$PROM_VERSION/prometheus-$PROM_VERSION.linux-$ARCH.tar.gz | tar -xz
-cp prometheus-$PROM_VERSION.linux-$ARCH/prometheus /usr/local/bin/
-cp prometheus-$PROM_VERSION.linux-$ARCH/promtool /usr/local/bin/
-chown prometheus:prometheus /usr/local/bin/prometheus
-chown prometheus:prometheus /usr/local/bin/promtool
-cp -r prometheus-$PROM_VERSION.linux-$ARCH/consoles /etc/prometheus
-cp -r prometheus-$PROM_VERSION.linux-$ARCH/console_libraries /etc/prometheus
-chown -R prometheus:prometheus /var/lib/prometheus
-chown -R prometheus:prometheus /etc/prometheus/consoles
-chown -R prometheus:prometheus /etc/prometheus/console_libraries
-mv /tmp/prometheus.yml /etc/prometheus/prometheus.yml
-chown prometheus:prometheus /etc/prometheus/prometheus.yml
-systemctl daemon-reload
-systemctl start prometheus
-systemctl enable prometheus
+handle_systemctl() {
+  systemctl daemon-reload
+  systemctl start $1
+  systemctl enable $1
+}
 
 curl -sSL https://github.com/prometheus/node_exporter/releases/download/v$NODE_EXPORTER_VERSION/node_exporter-$NODE_EXPORTER_VERSION.linux-$ARCH.tar.gz | tar -xz
 cp node_exporter-$NODE_EXPORTER_VERSION.linux-$ARCH/node_exporter /usr/local/bin
 chown node_exporter:node_exporter /usr/local/bin/node_exporter
-systemctl daemon-reload
-systemctl start node_exporter
-systemctl enable node_exporter
+
 curl -sSL https://github.com/dirien/minecraft-prometheus-exporter/releases/download/v$MINECRAFT_EXPORTER_VERSION/minecraft-exporter_$MINECRAFT_EXPORTER_VERSION.linux-$ARCH.tar.gz | tar -xz
 cp minecraft-exporter /usr/local/bin
 chown minecraft_exporter:minecraft_exporter /usr/local/bin/minecraft-exporter
 systemctl start minecraft-exporter.service
 systemctl enable minecraft-exporter.service
+
 mkdir -p /minecraft
 sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
 service sshd restart
@@ -58,3 +136,6 @@ mv /tmp/server.properties /minecraft/server.properties
 chmod a+rwx /minecraft
 systemctl restart minecraft.service
 systemctl enable minecraft.service
+}
+
+main "$@"
