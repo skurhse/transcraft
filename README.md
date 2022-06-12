@@ -3,6 +3,7 @@
 A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solution on [Azure](https://github.com/Azure), [Actions](https://github.com/actions) w/ [PaperMC](https://github.com/PaperMC). ⛏
 
 ## Programs
+- [apt-get](https://salsa.debian.org/apt-team/apt)
 - [azure-cli](https://github.com/Azure/azure-cli)
 - [curl](https://github.com/curl/curl)
 - [bash](https://git.savannah.gnu.org/cgit/bash.git/)

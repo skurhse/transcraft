@@ -1,51 +1,99 @@
 #!/usr/bin/env bash
 
-set -Cefuxo pipefail
-
 # REQ: Provisions in cloud-init `runcmd`. <skr 2022-06-11>
 
 # TODO: Check checksums. <skr 2022-06-11>
 
-# !!!: Implement quilt. <>
+# !!!: Test workflow. <>
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+set -Cefuxo pipefail
 
-mkdir /tmp/cloud-init
-cd $_
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-
-arch=$(arch)
+arch=$(dpkg-arch)
 
 etc=/etc
 lib=/var/lib
-local=/usr/local bin=$local/bin src=$local/src
+local=usr/local bin=$local/bin src=$local/src
 
-declare -A versions=(
-  [minecraft_exporter]=0.11.2
-  [node_exporter]=1.3.1
-  [quilt]=''
-)
+declare -A apt gh
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# DEBIAN_PACKAGE; https://packages.debian.org/search?keywords=ca-certificates
+# DEBIAN_REPO:    https://salsa.debian.org/debian/ca-certificates.git
+
+# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=ca-certificates
+# UBUNTU_REPO:    https://launchpad.net/ubuntu/+source/ca-certificates
+
+apt[ca-certificates]='20211016~20.04.1'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# DEBIAN_PACKAGE: https://packages.debian.org/search?keywords=fail2ban&searchon=names
+# DEBIAN_REPO:    https://salsa.debian.org/python-team/packages/fail2ban
+
+# GITHUB_REPO:    https://github.com/fail2ban/fail2ban
+
+# OFFICIAL_SITE:  https://www.fail2ban.org/
+# OFFICIAL_WIKI:  https://www.fail2ban.org/wiki/
+
+# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=fail2ban
+# UBUNTU_REPO:    https://launchpad.net/ubuntu/+source/fail2ban
+
+apt[fail2ban]='0.11.1-1'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# DEBIAN_PACKAGE: https://packages.debian.org/bullseye/openjdk-17-jre-headless
+# DEBIAN_REPO:    https://salsa.debian.org/openjdk-team/openjdk  
+
+# OFFICIAL_SITE:  https://openjdk.java.net/
+# OFFICIAL_WIKI:  https://wiki.openjdk.java.net
+
+# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=openjdk-17-jre-headless&searchon=names
+# UBUNTU_REPO:    https://launchpad.net/ubuntu/+source/openjdk-17
+
+apt[openjdk-17-jre-headless]='17.0.3+7-0ubuntu0.20.04.1'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# UBUNTU_REPO: https://launchpad.net/ubuntu/+source/wget
+# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=wget&searchon=names
+
+apt[wget]='1.20.3-1ubuntu2'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# OFFICAL_DOCS:  https://prometheus.io/
+# OFFICIAL_SITE: https://prometheus.io/docs/
+
+# GITHUB_REPO:   https://github.com/prometheus/prometheus.git
+
+gh[prometheus]='2.36.1'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# GITHUB_REPO:    https://github.com/prometheus/node_exporter.git
+
+# OFFICIAL_GUIDE: https://prometheus.io/docs/guides/node-exporter/
+gh[node_exporter]='1.3.1'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+# GITHUB_REPO: https://github.com/dirien/minecraft-prometheus-exporter.git
+
+gh[minecraft-exporter]='0.11.2'
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-download_release() {
+download_github_release() {
   for key in ${!release[@]}
   do
     declare $key=${release[$key]}
   done
   
-  local name=$name${1--}$version.linux-$arch 
+  local name="$name${1--}$version.linux-$arch"
 
-  local url=https://github.com/$owner/$repo/releases/downloads/v$version/$name.tar.gz
+  local url="https://github.com/$owner/$repo/releases/downloads/v$version/$name.tar.gz"
 
   release[name]=$name
   release[url]=$url
   
   wget $url | tar x -C $src
 }
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 install_from_release() {
   for entity in ${entities[@]}
@@ -55,8 +103,6 @@ install_from_release() {
   done
 }
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-
 install_dirs() {
   for dir in ${dirs[@]}
   do
@@ -65,16 +111,12 @@ install_dirs() {
   done
 }
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-
 handle_systemctl() {
   declare -n u=unit
   systemctl daemon-reload
   systemctl start $u
   systemctl enable $u
 }
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 configure_iptables() {
   sudo iptables -A INPUT -p tcp -m state --state NEW --dport 25555 -j ACCEPT
@@ -93,8 +135,16 @@ configure_iptables() {
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-name=prometheus
-version=2.36.1
+apt-get update
+
+for $package in ${packages[@]}
+do
+  apt-get install $package=$version
+done
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+name=prometheus version=${versions[$name]}
 
 declare -A release=([owner]=$name [repo]=$name [version]=$version)
 declare -A dirs=([etc]=/etc/$name [lib]=/var/lib/$name)
@@ -111,8 +161,7 @@ handle_systemctl
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-name=node_exporter
-version=1.3.1
+name=node_exporter version=${versions[$name]}]
 
 declare -A release=([owner]=prometheus [repo]=$name [version]=$version)
 declare -A unit=([owner]=$name [group]=$name [name]=$name)
@@ -124,8 +173,7 @@ handle_systemctl
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-name=minecraft-exporter
-version=0.13.0
+name=minecraft_exporter version=${versions[$name]}]
 
 declare -A release=([owner]=dirien [repo]=minecraft-prometheus-exporter [version]=$version)
 declare -A unit=([owner]=$name [group]=$name [name]=$name)
