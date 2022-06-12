@@ -1,6 +1,6 @@
 # transcraft 🏳️‍⚧️
 
-A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solution on [Azure](https://github.com/Azure) w/ [PaperMC](https://github.com/PaperMC). ⛏
+A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solution on [Azure](https://github.com/Azure), [Actions](https://github.com/actions) w/ [PaperMC](https://github.com/PaperMC). ⛏
 
 ## Programs
 - [azure-cli](https://github.com/Azure/azure-cli)
