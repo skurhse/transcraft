@@ -6,6 +6,8 @@ set -Cefuxo pipefail
 
 # TODO: Check checksums. <skr 2022-06-11>
 
+# !!!: Implement quilt. <>
+
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 mkdir /tmp/cloud-init
@@ -32,8 +34,9 @@ download_release() {
   do
     declare $key=${release[$key]}
   done
+  
+  local name=$name${1--}$version.linux-$arch 
 
-  local name=$name-$version.linux-$arch 
   local url=https://github.com/$owner/$repo/releases/downloads/v$version/$name.tar.gz
 
   release[name]=$name
@@ -41,6 +44,8 @@ download_release() {
   
   wget $url | tar x -C $src
 }
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 install_from_release() {
   for entity in ${entities[@]}
@@ -50,6 +55,8 @@ install_from_release() {
   done
 }
 
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
 install_dirs() {
   for dir in ${dirs[@]}
   do
@@ -58,12 +65,16 @@ install_dirs() {
   done
 }
 
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
 handle_systemctl() {
   declare -n u=unit
   systemctl daemon-reload
   systemctl start $u
   systemctl enable $u
 }
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 configure_iptables() {
   sudo iptables -A INPUT -p tcp -m state --state NEW --dport 25555 -j ACCEPT
@@ -83,7 +94,9 @@ configure_iptables() {
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 name=prometheus
-declare -A release=([owner]=$name [repo]=$name [version]=2.36.1)
+version=2.36.1
+
+declare -A release=([owner]=$name [repo]=$name [version]=$version)
 declare -A dirs=([etc]=/etc/$name [lib]=/var/lib/$name)
 declare -A unit=([owner]=$name [group]=$name [name]=$name)
 declare -a programs=($name promtool)
@@ -93,82 +106,34 @@ declare -a exporters=(node minecraft)
 install_release
 install_dirs
 entities=(${programs[@]}) dir=$bin install_from_release
-entities=(${programs[@]}) dir=${dirs[etc]} install_from_release
+entities=(${configs[@]}) dir=${dirs[etc]} install_from_release
 handle_systemctl
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-for exporter in ${exporters[@]}
-do
-  install_exporter $exporter
-done
+name=node_exporter
+version=1.3.1
 
-cc=$c
-c=node_exporter
+declare -A release=([owner]=prometheus [repo]=$name [version]=$version)
+declare -A unit=([owner]=$name [group]=$name [name]=$name)
+declare -a programs=($name)
 
-declare -A ${c}_release=(
-  [owner]=$cc
-  [repo]=$c
-)
-set_github_release
-
-declare -A ${c}_unit=(
-  [owner]=$c
-  [group]=$c
-  [name]=$c
-)
-
-c=minecraft_exporter
-
-declare -A ${c}_release=(
-  [owner]=dirien
-  [repo]=minecraft-$cc-exporter
-)
-set_github_release
-
-declare -A ${c}_node_exporter_unit=(
-  [owner]=node_exporter
-  [group]=node_exporter
-  [name]=node_exporter
-)
-
-declare -A node_exporter=(
-  [git]=https://github.com/prometheus/node_exporter
-  [release]=node_exporter-${versions[node_exporter]}.linux-$arch
-  [owner]=node_exporter
-  [group]=node_exporter
-  [unit]=node_exporter
-)
-node_exporter[url]=${node_exporter[git]}/releases/download/v${versions[node_exporter]}/${node_exporter[release]}.tar.gz
+install_release
+entities=(${programs[@]}) dir=$bin install_from_release
+handle_systemctl
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
+name=minecraft-exporter
+version=0.13.0
 
-install_exporter() {
-  declare -n p=$1_exporter
+declare -A release=([owner]=dirien [repo]=minecraft-prometheus-exporter [version]=$version)
+declare -A unit=([owner]=$name [group]=$name [name]=$name)
+declare -a programs=($name)
 
-  install_to_source
-  curl -LSfs {$e[url]} | tar x -C $src
-  pushd $src
-  
-  program=
-  cp ${e[release]} $bin 
-
-  handle_systemctl ${e[unit]}
-}
-
-
-
-
-curl -sSL https://github.com/prometheus/node_exporter/releases/download/v$NODE_EXPORTER_VERSION/node_exporter-$NODE_EXPORTER_VERSION.linux-$ARCH.tar.gz | tar -xz
-cp node_exporter-$NODE_EXPORTER_VERSION.linux-$ARCH/node_exporter /usr/local/bin
-chown node_exporter:node_exporter /usr/local/bin/node_exporter
-
-curl -sSL https://github.com/dirien/minecraft-prometheus-exporter/releases/download/v$MINECRAFT_EXPORTER_VERSION/minecraft-exporter_$MINECRAFT_EXPORTER_VERSION.linux-$ARCH.tar.gz | tar -xz
-cp minecraft-exporter /usr/local/bin
-chown minecraft_exporter:minecraft_exporter /usr/local/bin/minecraft-exporter
-systemctl start minecraft-exporter.service
-systemctl enable minecraft-exporter.service
+install_release _
+entities=(${programs[@]}) dir=$bin install_from_release
+handle_systemctl
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
@@ -176,3 +141,10 @@ mkdir -p /minecraft
 sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
 service sshd restart
 systemctl restart fail2ban
+URL="https://papermc.io/api/v2/projects/paper/versions/1.18.1/builds/136/downloads/paper-1.18.1-136.jar"
+curl -sLSf $URL > /minecraft/server.jar
+echo "eula=true" > /minecraft/eula.txt
+mv /tmp/server.properties /minecraft/server.properties
+chmod a+rwx /minecraft
+systemctl restart minecraft.service
+systemctl enable minecraft.service
