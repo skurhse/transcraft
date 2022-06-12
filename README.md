@@ -1,4 +1,4 @@
-# transcraft
+# transcraft ⛏🏳️‍⚧️
 
 A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server on [Azure](https://github.com/Azure) w/ [PaperMC](https://github.com/PaperMC). ⛏
 
