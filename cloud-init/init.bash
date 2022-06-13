@@ -15,31 +15,12 @@ local=usr/local bin=$local/bin src=$local/src
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-declare -A packages
-
-# DEBIAN_PACKAGE: https://packages.debian.org/search?keywords=ca-certificates <>
-# DEBIAN_REPO:    https://salsa.debian.org/debian/ca-certificates.git <>
-
-packages['ca-certificates']='20211016~20.04.1'
-
-# DEBIAN_PACKAGE: https://packages.debian.org/search?keywords=fail2ban <>
-# DEBIAN_REPO:    https://salsa.debian.org/python-team/packages/fail2ban <>
-# GITHUB_REPO:    https://github.com/fail2ban/fail2ban <>
-# WEB_SITE:       https://www.fail2ban.org/ <>
-# WEB_WIKI:       https://www.fail2ban.org/wiki/ <>
-
-packages['fail2ban']='0.11.1-1'
-
-# DEBIAN_PACKAGE: https://packages.debian.org/bullseye/openjdk-17-jre-headless <>
-# DEBIAN_REPO:    https://salsa.debian.org/openjdk-team/openjdk <>
-# WEB_SITE:       https://openjdk.java.net/ <>
-# WEB_WIKI:       https://wiki.openjdk.java.net <>
-
-packages['openjdk-17-jre-headless']='17.0.3+7-0ubuntu0.20.04.1'
-
-# LORUM_IPSUM https://test.org/ <>
-
-packages['wget']='1.20.3-1ubuntu2'
+declare -A packages=(
+  ['ca-certificates']='20211016~20.04.1'
+  ['fail2ban']='0.11.1-1'
+  ['openjdk-17-jre-headless']='17.0.3+7-0ubuntu0.20.04.1'
+  ['wget']='1.20.3-1ubuntu2'
+)
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
