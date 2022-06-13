@@ -2,11 +2,9 @@
 
 # REQ: Provisions in cloud-init `runcmd`. <skr 2022-06-11>
 
-# TODO: Check checksums. <skr 2022-06-11>
-
+# TODO: Check checksums. <>
 # !!!: Test workflow. <>
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 set -Cefuxo pipefail
 
 arch=$(dpkg-arch)
@@ -15,74 +13,59 @@ etc=/etc
 lib=/var/lib
 local=usr/local bin=$local/bin src=$local/src
 
-declare -A apt gh
-
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# DEBIAN_PACKAGE; https://packages.debian.org/search?keywords=ca-certificates
-# DEBIAN_REPO:    https://salsa.debian.org/debian/ca-certificates.git
 
-# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=ca-certificates
-# UBUNTU_REPO:    https://launchpad.net/ubuntu/+source/ca-certificates
+declare -A packages
 
-apt[ca-certificates]='20211016~20.04.1'
+# DEBIAN_PACKAGE: https://packages.debian.org/search?keywords=ca-certificates <>
+# DEBIAN_REPO:    https://salsa.debian.org/debian/ca-certificates.git <>
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# DEBIAN_PACKAGE: https://packages.debian.org/search?keywords=fail2ban&searchon=names
-# DEBIAN_REPO:    https://salsa.debian.org/python-team/packages/fail2ban
+packages['ca-certificates']='20211016~20.04.1'
 
-# GITHUB_REPO:    https://github.com/fail2ban/fail2ban
+# DEBIAN_PACKAGE: https://packages.debian.org/search?keywords=fail2ban <>
+# DEBIAN_REPO:    https://salsa.debian.org/python-team/packages/fail2ban <>
+# GITHUB_REPO:    https://github.com/fail2ban/fail2ban <>
+# WEB_SITE:       https://www.fail2ban.org/ <>
+# WEB_WIKI:       https://www.fail2ban.org/wiki/ <>
 
-# OFFICIAL_SITE:  https://www.fail2ban.org/
-# OFFICIAL_WIKI:  https://www.fail2ban.org/wiki/
+packages['fail2ban']='0.11.1-1'
 
-# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=fail2ban
-# UBUNTU_REPO:    https://launchpad.net/ubuntu/+source/fail2ban
+# DEBIAN_PACKAGE: https://packages.debian.org/bullseye/openjdk-17-jre-headless <>
+# DEBIAN_REPO:    https://salsa.debian.org/openjdk-team/openjdk <>
+# WEB_SITE:       https://openjdk.java.net/ <>
+# WEB_WIKI:       https://wiki.openjdk.java.net <>
 
-apt[fail2ban]='0.11.1-1'
+packages['openjdk-17-jre-headless']='17.0.3+7-0ubuntu0.20.04.1'
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# DEBIAN_PACKAGE: https://packages.debian.org/bullseye/openjdk-17-jre-headless
-# DEBIAN_REPO:    https://salsa.debian.org/openjdk-team/openjdk  
+# LORUM_IPSUM https://test.org/ <>
 
-# OFFICIAL_SITE:  https://openjdk.java.net/
-# OFFICIAL_WIKI:  https://wiki.openjdk.java.net
-
-# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=openjdk-17-jre-headless&searchon=names
-# UBUNTU_REPO:    https://launchpad.net/ubuntu/+source/openjdk-17
-
-apt[openjdk-17-jre-headless]='17.0.3+7-0ubuntu0.20.04.1'
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# UBUNTU_REPO: https://launchpad.net/ubuntu/+source/wget
-# UBUNTU_PACKAGE: https://packages.ubuntu.com/search?keywords=wget&searchon=names
-
-apt[wget]='1.20.3-1ubuntu2'
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# OFFICAL_DOCS:  https://prometheus.io/
-# OFFICIAL_SITE: https://prometheus.io/docs/
-
-# GITHUB_REPO:   https://github.com/prometheus/prometheus.git
-
-gh[prometheus]='2.36.1'
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# GITHUB_REPO:    https://github.com/prometheus/node_exporter.git
-
-# OFFICIAL_GUIDE: https://prometheus.io/docs/guides/node-exporter/
-gh[node_exporter]='1.3.1'
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-# GITHUB_REPO: https://github.com/dirien/minecraft-prometheus-exporter.git
-
-gh[minecraft-exporter]='0.11.2'
+packages['wget']='1.20.3-1ubuntu2'
 
 # ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
-download_github_release() {
-  for key in ${!release[@]}
+declare -A releases
+
+# WEB_DOCS:    https://prometheus.io/ <>
+# WEB_SITE:    https://prometheus.io/docs/ <>
+# GITHUB_REPO: https://github.com/prometheus/prometheus.git <>
+
+releases['prometheus']='2.36.1'
+
+# WEB_GUIDE:   https://prometheus.io/docs/guides/node-exporter/ <>
+# GITHUB_REPO: https://github.com/prometheus/node_exporter.git <>
+
+releases['node_exporter']='1.3.1'
+
+# REPO: https://github.com/dirien/minecraft-prometheus-exporter.git <>
+
+releases['minecraft-exporter']='0.11.2'
+
+# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+
+download_release() {
+  for attr in ${!release[@]}
   do
-    declare $key=${release[$key]}
+    declare $attr=${release[$attr]}
   done
   
   local name="$name${1--}$version.linux-$arch"
@@ -137,8 +120,9 @@ configure_iptables() {
 
 apt-get update
 
-for $package in ${packages[@]}
+for $package in ${!packages[@]}
 do
+  version=${packages[$package]}
   apt-get install $package=$version
 done
 
