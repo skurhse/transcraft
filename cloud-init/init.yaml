@@ -6,6 +6,7 @@ users:
     shell: /bin/false
   - name: minecraft_exporter
     shell: /bin/false
+
 package_update: true
 
 packages:
@@ -14,10 +15,12 @@ packages:
   - curl
   - openjdk-17-jre-headless
   - fail2ban
+
 write_files:
   - path: /etc/sysctl.d/enabled_ipv4_forwarding.conf
     content: |
       net.ipv4.conf.all.forwarding=1
+
   - path: /tmp/server.properties
     content: |
       level-seed=stackitminecraftrocks
@@ -68,6 +71,7 @@ write_files:
       enable-rcon=true
       rcon.password=test
       server-port=25565
+
   - path: /tmp/prometheus.yml
     content: |
       global:
@@ -86,6 +90,7 @@ write_files:
           scrape_interval: 1m
           static_configs:
             - targets: ['localhost:9150']
+
   - path: /etc/systemd/system/prometheus.service
     content: |
       [Unit]
@@ -103,6 +108,7 @@ write_files:
           --web.console.libraries=/etc/prometheus/console_libraries
       [Install]
       WantedBy=multi-user.target
+
   - path: /etc/systemd/system/node_exporter.service
     content: |
       [Unit]
@@ -116,6 +122,7 @@ write_files:
       ExecStart=/usr/local/bin/node_exporter
       [Install]
       WantedBy=multi-user.target
+
   - path: /etc/systemd/system/minecraft-exporter.service
     content: |
       [Unit]
@@ -147,6 +154,7 @@ write_files:
       RestartSec=5
       [Install]
       WantedBy=multi-user.target
+
   - path: /etc/fail2ban/jail.local
     content: |
       [sshd]
@@ -156,7 +164,7 @@ write_files:
       bantime = 1000
       ignoreip = 
 
-runcmd:
+  - path: /tmp/cloud-init.bash
   - |
     set -Cefuxo pipefail
 
@@ -282,3 +290,6 @@ runcmd:
     chmod a+rwx /minecraft
     systemctl restart minecraft.service
     systemctl enable minecraft.service
+
+runcmd:
+  - [ /tmp/cloud-init.bash ]
