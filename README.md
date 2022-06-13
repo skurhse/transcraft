@@ -23,9 +23,18 @@ A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solu
   - [wiki])(https://wiki.openjdk.java.net)
 
 ## GitHub Releases
+- prometheus
+  - [website](https://prometheus.io/)
+  - [docs](https://prometheus.io/docs/)
+  - [github](https://github.com/prometheus/prometheus)
+- prometheus-minecraft-exporter
+  - [github](https://github.com/dirien/minecraft-prometheus-exporter)
+- node_exporter
+  - [guide](https://prometheus.io/docs/guides/node-exporter/)
+  - [github](https://github.com/prometheus/node_exporter)
 
-
-## Programs
+<!-- TODO: Disambiguate. <> -->
+## Other Programs
 - [apt-get](https://salsa.debian.org/apt-team/apt)
 - [azure-cli](https://github.com/Azure/azure-cli)
 - [curl](https://github.com/curl/curl)
@@ -35,7 +44,6 @@ A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solu
 - [java]()
 - [make](https://git.savannah.gnu.org/cgit/make.git/)
 - [multipass](https://github.com/canonical/multipass)
-- [prometheus](https://github.com/prometheus/prometheus)
 - [systemd](https://github.com/systemd/systemd)
 
 ## Plugins

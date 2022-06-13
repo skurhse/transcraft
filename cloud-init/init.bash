@@ -13,8 +13,6 @@ etc=/etc
 lib=/var/lib
 local=usr/local bin=$local/bin src=$local/src
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-
 declare -A packages=(
   ['ca-certificates']='20211016~20.04.1'
   ['fail2ban']='0.11.1-1'
@@ -22,20 +20,12 @@ declare -A packages=(
   ['wget']='1.20.3-1ubuntu2'
 )
 
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+declare -A releases=(
+  ['prometheus']='2.36.1'
+  ['node_exporter']='1.3.1'
+)
 
-declare -A releases
 
-# WEB_DOCS:    https://prometheus.io/ <>
-# WEB_SITE:    https://prometheus.io/docs/ <>
-# GITHUB_REPO: https://github.com/prometheus/prometheus.git <>
-
-releases['prometheus']='2.36.1'
-
-# WEB_GUIDE:   https://prometheus.io/docs/guides/node-exporter/ <>
-# GITHUB_REPO: https://github.com/prometheus/node_exporter.git <>
-
-releases['node_exporter']='1.3.1'
 
 # REPO: https://github.com/dirien/minecraft-prometheus-exporter.git <>
 
