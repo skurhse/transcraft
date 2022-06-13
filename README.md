@@ -4,7 +4,6 @@ A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solu
 - [GitHub Actions](https://github.com/actions)
 - [Microsoft Azure](https://github.com/Azure)
 - [PaperMC](https://github.com/PaperMC)
-- []()
 
 ## Azure Tooling
 - cloud-init
