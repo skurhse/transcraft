@@ -22,16 +22,9 @@ declare -A packages=(
 
 declare -A releases=(
   ['prometheus']='2.36.1'
+  ['minecraft-exporter']='0.11.2'
   ['node_exporter']='1.3.1'
 )
-
-
-
-# REPO: https://github.com/dirien/minecraft-prometheus-exporter.git <>
-
-releases['minecraft-exporter']='0.11.2'
-
-# ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 
 download_release() {
   for attr in ${!release[@]}
