@@ -6,6 +6,11 @@ A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solu
 - [PaperMC](https://github.com/PaperMC)
 - []()
 
+## Azure Tooling
+- cloud-init
+  - [github](https://github.com/canonical/cloud-init)
+  - [tutorial](https://cloudinit.readthedocs.io/en/latest/topics/tutorial.html)
+
 ## APT Packages
 - ca-certificates
   - [launchpad](https://launchpad.net/ubuntu/+source/ca-certificates)
@@ -39,7 +44,6 @@ A [transgender](https://en.wikipedia.org/wiki/Transgender) Minecraft server solu
 - [azure-cli](https://github.com/Azure/azure-cli)
 - [curl](https://github.com/curl/curl)
 - [bash](https://git.savannah.gnu.org/cgit/bash.git/)
-- [cloud-init](https://github.com/canonical/cloud-init)
 - [coreutils](https://git.savannah.gnu.org/cgit/coreutils.git/)
 - [java]()
 - [make](https://git.savannah.gnu.org/cgit/make.git/)
