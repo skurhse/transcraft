@@ -6,7 +6,7 @@
 
 set -Cefuxo pipefail
 
-path=$(realpath "$0"); init="$(dirname $path)/../cloud-init/init.yaml"
+path=$(realpath "$0"); init="$(dirname $path)/../cloud-init/cloud-config.yaml"
 
 name='transcraft' cpus='1' mem='4GB' disk='32GB'
 
