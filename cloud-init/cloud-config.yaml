@@ -4,7 +4,7 @@ users:
     shell: /bin/false
   - name: node_exporter
     shell: /bin/false
-  - name: minecraft_exporter
+  - name: minecraft-exporter
     shell: /bin/false
 
 package_update: true
@@ -165,7 +165,6 @@ write_files:
       ignoreip = 
 
   - path: /run/cloud-init.bash
-    permissions: '0755'
     content: |
       set -Cefuxo pipefail
 
@@ -173,51 +172,53 @@ write_files:
 
       etc=/etc
       lib=/var/lib
-      local=usr/local bin=$local/bin src=$local/src
+      local=/usr/local bin=$local/bin src=$local/src
 
       declare -A versions=(
-        ['prometheus']='2.36.1'
-        ['minecraft-exporter']='0.11.2'
-        ['node_exporter']='1.3.1'
+        [prometheus]=2.36.1
+        [minecraft-exporter]=0.11.2
+        [node_exporter]=1.3.1
       )
 
       download_release() {
-        for attr in ${!release[@]}
-        do
-          declare $attr=${release[$attr]}
-        done
+        for attr in ${!release[@]}; do declare $attr=${release[$attr]}; done
         
-        local name="$name${1--}$version.linux-$arch"
+        local name=$name${1--}$version.linux-$arch
 
-        local url="https://github.com/$owner/$repo/releases/download/v$version/$name.tar.gz"
+        local url=https://github.com/$owner/$repo/releases/download/v$version/$name.tar.gz
 
         release[name]=$name
         release[url]=$url
         
-        wget $url | tar x -C $src
+        if [ ${mkdir-no} = yes ]; then
+          dir=$src/$name
+          mkdir -p $dir
+        else
+          dir=$src
+        fi
+
+        curl -LSfs $url | tar xz -C $dir
       }
 
       install_from_release() {
         for entity in ${entities[@]}
         do
-          cp -r ${release[name]}/$entity $dir
+          cp -r $src/${release[name]}/$entity $dir
           chown -R ${unit[owner]}:${unit[group]} $dir/$entity
         done
       }
 
       install_dirs() {
-        for dir in ${dirs[@]}
-        do
+        for dir in ${dirs[@]}; do
           mkdir $dir
           chown ${unit[owner]}:${unit[group]} $dir
         done
       }
 
       handle_systemctl() {
-        declare -n u=unit
         systemctl daemon-reload
-        systemctl start $u
-        systemctl enable $u
+        systemctl start $name
+        systemctl enable $name
       }
 
       configure_iptables() {
@@ -243,40 +244,40 @@ write_files:
       declare -A dirs=([etc]=/etc/$name [lib]=/var/lib/$name)
       declare -A unit=([owner]=$name [group]=$name [name]=$name)
       declare -a programs=($name promtool)
-      declare -a configs=(consoles console_libraries name.yml)
+      declare -a configs=(consoles console_libraries $name.yml)
       declare -a exporters=(node minecraft)
 
       download_release
       install_dirs
-      entities=(${programs[@]}) dir=$bin install_from_release
-      entities=(${configs[@]}) dir=${dirs[etc]} install_from_release
-      handle_systemctl
+      entities=${programs[@]} dir=$bin install_from_release
+      entities=${configs[@]} dir=${dirs[etc]} install_from_release
+      name=${unit[name]} handle_systemctl
 
-      name=node_exporter version=${versions[$name]}]
+      name=node_exporter version=${versions[$name]}
 
       declare -A release=([owner]=prometheus [repo]=$name [version]=$version)
       declare -A unit=([owner]=$name [group]=$name [name]=$name)
       declare -a programs=($name)
 
       download_release
-      entities=(${programs[@]}) dir=$bin install_from_release
-      handle_systemctl
+      entities=${programs[@]} dir=$bin install_from_release
+      name=${unit[name]} handle_systemctl
 
-      name=minecraft_exporter version=${versions[$name]}]
+      name=minecraft-exporter version=${versions[$name]}
 
       declare -A release=([owner]=dirien [repo]=minecraft-prometheus-exporter [version]=$version)
       declare -A unit=([owner]=$name [group]=$name [name]=$name)
       declare -a programs=($name)
 
-      download_release _
-      entities=(${programs[@]}) dir=$bin install_from_release
-      handle_systemctl
+      mkdir=yes download_release _
+      entities=${programs[@]} dir=$bin install_from_release
+      name=${unit[name]} handle_systemctl
 
       mkdir -p /minecraft
       sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
       service sshd restart
       systemctl restart fail2ban
-      URL="https://papermc.io/api/v2/projects/paper/versions/1.18.1/builds/136/downloads/paper-1.18.1-136.jar"
+      URL="https://api.papermc.io/v2/projects/paper/versions/1.19/builds/8/downloads/paper-1.19-8.jar"
       curl -sLSf $URL > /minecraft/server.jar
       echo "eula=true" > /minecraft/eula.txt
       mv /tmp/server.properties /minecraft/server.properties

@@ -8,8 +8,10 @@ set -Cefuxo pipefail
 
 path=$(realpath "$0"); init="$(dirname $path)/../cloud-init/cloud-config.yaml"
 
-name='transcraft' cpus='1' mem='4GB' disk='32GB'
+name='transcraft' cpus='1' mem='8GB' disk='32GB'
 
-! multipass delete --purge "$name"
 multipass launch --name "$name" -c$cpus -m$mem -d$disk --cloud-init "$init"
-multipass exec transcraft -- cat /var/log/cloud-init-output.log
+
+set +e
+! multipass exec transcraft -- cat /var/log/cloud-init-output.log
+multipass delete --purge "$name"
