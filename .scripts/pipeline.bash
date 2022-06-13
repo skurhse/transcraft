@@ -52,6 +52,8 @@ sp[id]=$(az ad sp show --id ${sp[client_id]} --query objectId -o tsv)
 
 realpath=$(realpath $0); dirname=$(dirname $realpath); cd $dirname/..
 
+ssh_dir=$(dirname ${key[file]})
+mkdir -p $ssh_dir
 ssh-keygen -C ${key[email]} -t ${key[type]} -b ${key[bits]} -f ${key[file]} -N ''
 
 gh secret set SSH_PRIVATE_KEY < ${key[file]}
