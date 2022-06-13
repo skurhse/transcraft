@@ -10,5 +10,6 @@ path=$(realpath "$0"); init="$(dirname $path)/../cloud-init/init.yaml"
 
 name='transcraft' cpus='1' mem='4GB' disk='32GB'
 
+! multipass delete --purge "$name"
 multipass launch --name "$name" -c$cpus -m$mem -d$disk --cloud-init "$init"
 multipass exec transcraft -- cat /var/log/cloud-init-output.log
