@@ -139,18 +139,17 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /etc/systemd/system/minecraft.service
+  - path: /etc/systemd/system/quilt.service
     content: |
       [Unit]
-      Description=Minecraft Server
-      Documentation=https://www.minecraft.net/en-us/download/server
+      Description=The Quilt Project
+      Documentation=https://quiltmc.org/
       DefaultDependencies=no
       After=network.target
       [Service]
-      WorkingDirectory=/minecraft
+      WorkingDirectory=/quilt
       Type=simple
-      ExecStart=/usr/bin/java -Xmx2G -Xms2G -jar server.jar nogui
-      
+      ExecStart=/usr/bin/java -Xmx4G -Xms4G -jar server.jar nogui
       Restart=on-failure
       RestartSec=5
       [Install]
@@ -179,29 +178,39 @@ write_files:
         [prometheus]=2.36.1
         [minecraft-exporter]=0.11.2
         [node_exporter]=1.3.1
+        [quilt-installer]=latest
       )
 
-      download_release() {
-        for attr in ${!release[@]}; do declare $attr=${release[$attr]}; done
-        
-        local name=$name${1--}$version.linux-$arch
-
-        local url=https://github.com/$owner/$repo/releases/download/v$version/$name.tar.gz
-
-        release[name]=$name
-        release[url]=$url
-        
-        if [ ${mkdir-no} = yes ]; then
-          dir=$src/$name
-          mkdir -p $dir
-        else
-          dir=$src
-        fi
-
-        curl -LSfs $url | tar xz -C $dir
+      release() {
+        echo "for attr in \${!$1_release[@]}; do declare \$attr=\${$!_release[\$attr]}; done"
+      }
+      
+      make_github_release() { . <(release github)
+        release[dir]=$name${delim--}$version.linux-$arch
       }
 
-      install_from_release() {
+      download_github_release() { . <(github_release)
+        local url=https://github.com/$owner/$repo/releases/download/v$version/$dir.tar.gz
+
+        if [ ${mkdir-no} = yes ]; then
+          local src=$src/$name
+          mkdir -p $dir
+        fi
+
+        curl -LSfs $url | tar xz -C $src
+      }
+
+      download_quilt_release() {
+        url=https://maven.quiltmc.org/repository/release/org/quiltmc/$name/latest/quilt-installer-latest.jar
+
+        curl -sLSf $url > /quilt/server.jar
+        echo "eula=true" > /minecraft/eula.txt
+        mv /tmp/server.properties /minecraft/server.properties
+        chmod a+rwx /minecraft
+
+      }
+
+      install_from_source() {
         for entity in ${entities[@]}
         do
           cp -r $src/${release[name]}/$entity $dir
@@ -209,7 +218,7 @@ write_files:
         done
       }
 
-      install_dirs() {
+      make_dirs() {
         for dir in ${dirs[@]}; do
           mkdir $dir
           chown ${unit[owner]}:${unit[group]} $dir
@@ -226,33 +235,33 @@ write_files:
         iptables -I INPUT -j ACCEPT
 
         # iptables -A INPUT -p tcp -m state --state NEW --dport 25555 -j ACCEPT
-        # where 25555 is the port
-        # you do that for every ports
-        # and then
         # iptables-save
-        # and also
         # dpkg-reconfigure iptables-persistent
 
-        # of course to block everything
         # iptables -P INPUT DROP
         # iptables -P OUTPUT DROP
         # iptables -P FORWARD DROP
       }
 
+
       name=prometheus version=${versions[$name]}
 
-      declare -A release=([owner]=$name [repo]=$name [version]=$version)
+      declare -A github_release=([owner]=$name [repo]=$name [version]=$version)
+      download_github_release
+
       declare -A dirs=([etc]=/etc/$name [lib]=/var/lib/$name)
+      make_dirs
+
+      entities=${programs[@]} dir=$bin install_from_source
+      entities=${configs[@]} dir=${dirs[etc]} install_from_source
+
       declare -A unit=([owner]=$name [group]=$name [name]=$name)
       declare -a programs=($name promtool)
       declare -a configs=(consoles console_libraries $name.yml)
       declare -a exporters=(node minecraft)
 
-      download_release
-      install_dirs
-      entities=${programs[@]} dir=$bin install_from_release
-      entities=${configs[@]} dir=${dirs[etc]} install_from_release
       name=${unit[name]} handle_systemctl
+
 
       name=node_exporter version=${versions[$name]}
 
@@ -260,9 +269,10 @@ write_files:
       declare -A unit=([owner]=$name [group]=$name [name]=$name)
       declare -a programs=($name)
 
-      download_release
-      entities=${programs[@]} dir=$bin install_from_release
+      download_github_release
+      entities=${programs[@]} dir=$bin install_from_source
       name=${unit[name]} handle_systemctl
+
 
       name=minecraft-exporter version=${versions[$name]}
 
@@ -270,21 +280,27 @@ write_files:
       declare -A unit=([owner]=$name [group]=$name [name]=$name)
       declare -a programs=($name)
 
-      mkdir=yes download_release _
-      entities=${programs[@]} dir=$bin install_from_release
+      mkdir=yes delim=_ download_github_release
+      entities=${programs[@]} dir=$bin install_from_source
       name=${unit[name]} handle_systemctl
 
-      mkdir -p /minecraft
+
+      name=quilt-installer version=${versions[$name]} 
+
+      declare -A release([owner]=quiltmc [repo]=$name [version]=$version)
+      declare -A unit=([owner]=quiltmc [name]=$name)
+      delcare dirs=(/quilt)
+
+      make_dirs
+      download_quilt_release
+      handle_systemctl
+      
+
       sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
       service sshd restart
+
+
       systemctl restart fail2ban
-      URL="https://api.papermc.io/v2/projects/paper/versions/1.19/builds/8/downloads/paper-1.19-8.jar"
-      curl -sLSf $URL > /minecraft/server.jar
-      echo "eula=true" > /minecraft/eula.txt
-      mv /tmp/server.properties /minecraft/server.properties
-      chmod a+rwx /minecraft
-      systemctl restart minecraft.service
-      systemctl enable minecraft.service
 
 runcmd:
   - [ /bin/bash, /run/cloud-init.bash ]
