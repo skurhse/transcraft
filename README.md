@@ -1,12 +1,30 @@
 # transcraft 🏳️‍⚧️
 
-A Minecraft server solution built on GitHub Actions, Microsoft Azure and QuiltMC.
+A Minecraft server solution built on Actions, Azure, Ubuntu and QuiltMC.
 
 ## Programs
 
+- apt-get
+  - [launchpad](https://salsa.debian.org/apt-team/apt)
+
+- azure-cli
+  - [docs](https://docs.microsoft.com/en-us/cli/azure/)
+  - [github](https://github.com/Azure/azure-cli)
+
+- bash
+  - [cgit](https://git.savannah.gnu.org/cgit/bash.git/)
+  - [manual](https://www.gnu.org/software/bash/manual/bash.html)
+
+- coreutils
+  - [cgit](https://git.savannah.gnu.org/cgit/coreutils.git/)
+  - [manual](https://www.gnu.org/software/coreutils/manual/coreutils.html)
+
+- curl
+  - [github](https://github.com/curl/curl)
+
 - cloud-init
+  - [docs](https://cloudinit.readthedocs.io/en/latest/index.html)
   - [github](https://github.com/canonical/cloud-init)
-  - [tutorial](https://cloudinit.readthedocs.io/en/latest/topics/tutorial.html)
 
 - ca-certificates
   - [launchpad](https://launchpad.net/ubuntu/+source/ca-certificates)
@@ -19,6 +37,13 @@ A Minecraft server solution built on GitHub Actions, Microsoft Azure and QuiltMC
   - [website](https://www.fail2ban.org/)
   - [wiki](https://www.fail2ban.org/wiki/)
 
+- make
+  - [cgit](https://git.savannah.gnu.org/cgit/make.git/)
+  - [manual](https://www.gnu.org/software/make/manual/make.html)
+
+- multipass
+  - [github](https://github.com/canonical/multipass)
+
 - openjdk
   - [launchpad](https://launchpad.net/ubuntu/+source/openjdk-17)
   - [package](https://packages.ubuntu.com/search?keywords=openjdk-17-jre-headless)
@@ -26,33 +51,22 @@ A Minecraft server solution built on GitHub Actions, Microsoft Azure and QuiltMC
   - [wiki](https://wiki.openjdk.java.net)
 
 - prometheus
-  - [website](https://prometheus.io/)
   - [docs](https://prometheus.io/docs/)
   - [github](https://github.com/prometheus/prometheus)
+  - [website](https://prometheus.io/)
   - prometheus-minecraft-exporter
     - [github](https://github.com/dirien/minecraft-prometheus-exporter)
   - node_exporter
-    - [guide](https://prometheus.io/docs/guides/node-exporter/)
     - [github](https://github.com/prometheus/node_exporter)
+    - [guide](https://prometheus.io/docs/guides/node-exporter/)
+
+- systemd
+  - [github](https://github.com/systemd/systemd)
 
 ## Specifications
 
 - [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
 - [Semantic Versioning](https://semver.org/)
 
-<!-- TODO: Add-in. <>
-- [apt-get](https://salsa.debian.org/apt-team/apt)
-- [azure-cli](https://github.com/Azure/azure-cli)
-- [curl](https://github.com/curl/curl)
-- [bash](https://git.savannah.gnu.org/cgit/bash.git/)
-- [coreutils](https://git.savannah.gnu.org/cgit/coreutils.git/)
-- [java]()
-- [make](https://git.savannah.gnu.org/cgit/make.git/)
-- [multipass](https://github.com/canonical/multipass)
-- [systemd](https://github.com/systemd/systemd)
-
-## Plugins
+##  Plugins
 - rcon
-
--->
-
