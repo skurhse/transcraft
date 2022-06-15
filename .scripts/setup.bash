@@ -4,6 +4,7 @@
 
 brew update
 
+brew install azure-cli
 brew install bash
 brew install github
 brew install --cask multipass
