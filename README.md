@@ -1,6 +1,6 @@
 # transcraft 🏳️‍⚧️
 
-A transgender Minecraft server solution built on GitHub Actions, Microsoft Azure and QuiltMC.
+A Minecraft server solution built on GitHub Actions, Microsoft Azure and QuiltMC.
 
 ## Programs
 
@@ -36,6 +36,9 @@ A transgender Minecraft server solution built on GitHub Actions, Microsoft Azure
     - [github](https://github.com/prometheus/node_exporter)
 
 ## Specifications
+
+- [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
+- [Semantic Versioning](https://semver.org/)
 
 <!-- TODO: Add-in. <>
 - [apt-get](https://salsa.debian.org/apt-team/apt)
