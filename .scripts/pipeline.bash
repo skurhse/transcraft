@@ -1,67 +1,138 @@
 #!/usr/bin/env bash
 
-# REQ: Sets up the deploy action. <skr 2022-06-11>
+# REQ: Creates the deploy pipeline. <skr 2022-06-14*>
 
-set -Cefuxo pipefail
+[ $(bash --version | head -1 | cut -d ' ' -f4) == '5.1.16(1)-release' ] && \
+[ $(az version --query '"azure-cli"' -o tsv)   == '2.37.0'            ] && \
+[ $(gh version | head -1 | cut -d ' ' -f3)     == '2.12.1'            ] || \
+exit
 
-sub_id=$(az account show --query id -o tsv)
+set -o errexit
+set -o noclobber
+set -o noglob
+set -o nounset
+set -o pipefail
+set -o xtrace
 
-declare -A key=(
-  [type]=rsa
-  [bits]=4096
-  [email]=hello@drruruu.dev
-)
-key[file]=.ssh/id_${key[type]}
+make_key() {
+  declare -Ag key=(
+    [type]='rsa'
+    [bits]='4096'
+    [email]='transcraft@transprogrammer.org'
+  )
+  key[file]=".ssh/id_${key[type]}"
+}
 
-declare -A group=(
-  [name]=transcraft
-  [location]=centralus
-)
+make_group() {
+  declare -Ag group=(
+    [name]='transcraft'
+    [location]='centralus'
+  )
+}
 
-declare -A sp=(
-  [name]=github_actions
-  [role]=contributor
-  [scope]=/subscriptions/$sub_id/resourceGroups/${group[name]}
-)
+make_principal() {
+  declare -Ag principal=(
+    [name]='github_actions'
+    [role]='contributor'
+    [scope]="/subscriptions/$1/resourceGroups/$2"
+  )
+}
 
-declare -A user
-user[id]=$(az ad user list --query [].objectId --output tsv --only-show-errors)
+main() {
+  fetch_subscription_id
+  fetch_user_id
 
-if [ $(az group exists -n ${group[name]}) = true ]
-then
-  az group delete -n "${group[name]}"
-fi
-az group create -n "${group[name]}" -l "${group[location]}"
+  make_group
+  if group_exists; then delete_group; fi
+  create_group
 
-old_sps=$(az ad sp list --display-name ${sp[name]})
-old_sps_length=$(jq length <<< $old_sps)
-case $old_sps_length in
-0)
-  ;;
-1)
-  old_sp_id=$(jq -r .[0].objectId <<< $old_sps)
-  az ad sp delete --id $old_sp_id
-  ;;
-*)
-  exit
-  ;;
-esac
-credentials=$(az ad sp create-for-rbac -n ${sp[name]} --role ${sp[role]} --scopes ${sp[scope]} --sdk-auth)
-sp[client_id]=$(jq -r .clientId <<< $credentials)
-sp[id]=$(az ad sp show --id ${sp[client_id]} --query objectId -o tsv)
+  make_principal "$subcription_id" "${group[name]}"
+  if principal_exists; then delete_principal; fi
+  create_group
 
-realpath=$(realpath $0); dirname=$(dirname $realpath); cd $dirname/..
+  make_key
+  generate_key
 
-ssh_dir=$(dirname ${key[file]})
-mkdir -p $ssh_dir
-ssh-keygen -C ${key[email]} -t ${key[type]} -b ${key[bits]} -f ${key[file]} -N ''
+  # TODO: loop
+  gh secret set SSH_PRIVATE_KEY < ${key[file]}
+  gh secret set SSH_PUBLIC_KEY < ${key[file]}.pub
 
-gh secret set SSH_PRIVATE_KEY < ${key[file]}
-gh secret set SSH_PUBLIC_KEY < ${key[file]}.pub
+  gh secret set AZURE_CREDENTIALS -b "$credentials"
+  gh secret set AZURE_RESOURCE_GROUP -b "${group[name]}"
+  gh secret set AZURE_SUBSCRIPTION -b "$subcription_id"
 
-gh secret set AZURE_CREDENTIALS -b "$credentials"
-gh secret set AZURE_RESOURCE_GROUP -b ${group[name]}
-gh secret set AZURE_SUBSCRIPTION -b $sub_id
+  gh secret set BICEP_SERVICE_PRINCIPAL -b "${principal[id]}"
+  gh secret set BICEP_USER -b "$user_id"
+}
 
-gh secret set BICEP_SERVICE_PRINCIPAL -b ${sp[id]}
-gh secret set BICEP_USER -b ${user[id]}
+generate_key() {
+  realpath=$(realpath "$0")
+  dirname=$(dirname "$realpath")
+  cd "$dirname/.."
+
+  ssh_dir=$(dirname "${key[file]}")
+  mkdir -p "$ssh_dir"
+  ssh-keygen \
+    -C "${key[email]}" \
+    -t "${key[type]}"  \
+    -b "${key[bits]}"  \
+    -f "${key[file]}"  \
+    -N ''
+}
+
+create_group() {
+  az group create --name "${group[name]}" --location "${group[location]}"
+}
+delete_group() {
+  az group delete --name "${group[name]}"
+}
+group_exists() {
+  [[ $(az group exists -n ${group[name]}) == true ]] && return 0 || return 1
+}
+
+create_principal() {
+  credentials=$(
+    az ad sp create-for-rbac \
+    --name   ${principal[name]} \
+    --role   ${principal[role]} \
+    --scopes ${principal[scope]} \
+    --sdk-auth
+  )
+  declare -g credentials
+  principal[client_id]=$(jq -r .clientId <<< $credentials)
+  principal[id]=$(az ad sp show --id ${principal[client_id]} --query objectId -o tsv)
+}
+delete_principal() {
+    az ad sp delete --id $old_principal_id
+}
+principal_exists() {
+  principals=$(az ad sp list --display-name ${principal[name]})
+
+  size=$(jq length <<< $listed_principals)
+  case $size in
+  0)
+    old_principal_id=$(jq -r .[0].objectId <<< $principals)
+    declare -g old_principal_id
+    return 0
+    ;;
+  1)
+    return 1
+    ;;
+  *)
+    echo "error: unexpected principals size $size."
+    exit 1
+    ;;
+  esac
+}
+
+fetch_subscription_id() {
+  subcription_id=$(az account show --query id -o tsv)
+  declare -g subcription_id
+}
+
+fetch_user_id() {
+  user_id=$(az ad user list --query [].objectId --output tsv --only-show-errors)
+  declare -g user_id
+}
+
+main
