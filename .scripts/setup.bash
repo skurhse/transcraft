@@ -4,7 +4,7 @@
 
 set +B -Cefuxo pipefail
 
-local=/usr/local src=$local/src bin=$local/bin
+local='/usr/local' src="$local/src" bin="$local/bin"
 
 brewfile='
   brew "azure-cli"
