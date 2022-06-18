@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# REQ: Installs dev tools on macOS Montery. <skr 2002-06-15>
+# REQ: Installs dev tools on macOS Monterey. <skr 2002-06-15>
 
 # TODO: Handle ~/.bash_profile setup. <>
 
