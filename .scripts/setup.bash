@@ -63,11 +63,17 @@ install_cloud-init() {
   url="$scheme://$host/$name/$release/$version/+download/$name-$version.tar.gz"
   curl -LSfs "$url" | sudo tar xz -C "$src"
 
-  cd "$src"
-  for command in 'build' 'install'
+  cd "$src/$name-$version"
+  for command in 'build' 'develop'
   do
     sudo python3 setup.py "$command"
   done
+
+  # CAVEAT: Hardcoded. <skr>
+  source_file='../Cellar/python@3.9/3.9.13_1/Frameworks/Python.framework/Versions/3.9/bin/cloud-init'
+  target_file='/opt/homebrew/bin/cloud-init'
+
+  ! ln -s  "$source_file" "$target_file"
 }
 
 main
