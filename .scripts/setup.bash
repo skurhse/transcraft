@@ -60,7 +60,7 @@ install_cloud-init() {
     curl -LSfs "$url" | xq -r "$v_path"
   )
 
-  url="$scheme://$host/$name/$release/$version/+download/$release-$version.tar.gz"
+  url="$scheme://$host/$name/$release/$version/+download/$name-$version.tar.gz"
   curl -LSfs "$url" | sudo tar xz -C "$src"
 
   cd "$src"
