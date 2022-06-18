@@ -3,6 +3,10 @@ JMES = properties.outputs.minecraftPublicIP.value
 GROUP = transcraft
 DEPL = main
 
+.PHONY: setup
+setup:
+	.scripts/setup.bash
+
 .PHONY: pipeline
 pipeline:
 	.scripts/pipeline.bash

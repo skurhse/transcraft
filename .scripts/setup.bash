@@ -1,79 +1,67 @@
 #!/usr/bin/env bash
 
-# REQ: Installs dev tools on macOS Monterey. <skr 2002-06-15>
+# REQ: Installs utilities with homebrew. <skr 2022-06 s:inprogress>
 
-# TODO: Handle ~/.bash_profile setup. <>
+set +B -Cefuxo pipefail
 
-set -o errexit
-set -o noclobber
-set -o noglob
-set -o nounset
-set -o pipefail
-set -o xtrace
+local=/usr/local src=$local/src bin=$local/bin
 
-local=/usr/local
-src=$local/bin
-src=$local/src
-sudo mkdir -p $src
+brewfile='
+  brew "azure-cli"
+  brew "bash"
+  brew "gh"
+  brew "gnu-tar"
+  brew "yq"
+  
+  cask "multipass"
+'
 
- brew_formulae=(
-  'azure-cli'
-  'bash'
-  'gh'
-  'gnu-tar'
-  'yq'
-)
-
- brew_casks=(
-  'multipass'
-)
-
- launchpad_releases=(
+releases=(
   'cloud-init'
 )
 
 main() {
-  update_brew
-  install_brew_formulae
-  install_brew_casks
-
-  install_launchpad_releases
+  brew bundle --file=- <<<$brewfile
+  
+  make_dirs
+  install_cloud-init
 }
 
-update_brew() {
-  brew update
+make_dirs() {
+  sudo mkdir -p $src $bin
 }
 
-install_brew_formulae() {
-  for formula in ${brew_ormulae[@]}
-  do
-    brew install $formula
-  done
-}
+install_cloud-init() {
+  r_path+='."rdf:RDF"'
+  r_path+='."lp:ProductSeries"'
+  r_path+='."lp:release"'
+  r_path+=[0]
 
-install_brew_casks() {
-  for cask in ${brew_casks[@]}
-  do
-    brew install --cask $cask
-  done
-}
+  r_path+='."lp:ProductRelease"'
+  r_path+='."lp:specifiedAt"'
+  r_path+='."@rdf:resource"'
 
-# TODO: Figure-out how to properly query for latest. <skr>
-# Install to multipass virtual machine
-install_launchpad_releases() {
-  for release in "${launchpad_releases[@]}"
+  v_path+='."rdf:RDF"'
+  v_path+='."lp:ProductRelease"'
+  v_path+='."lp:version"'
+
+  scheme=https
+  host=launchpad.net
+  name=trunk
+
+  for release in "${releases[@]}"
   do
     resource=$(
-      curl -LSfs "https://launchpad.net/$release/trunk/+rdf" | \
-      xq -r .'"rdf:RDF"."lp:ProductSeries"."lp:release"[0]."lp:ProductRelease"."lp:specifiedAt"."@rdf:resource"'
+      url=$scheme://$host/$release/$name/+rdf
+      curl -LSfs $url | xq -r "$r_path" 
     )
     version=$(
-      curl -LSfs "https://launchpad.net$resource" | \
-      xq -r '."rdf:RDF"."lp:ProductRelease"."lp:version"'
+      url=$scheme://$host$resource
+      curl -LSfs $url | xq -r "$v_path"
     )
 
-    curl -LSfs "https://launchpad.net/$release/trunk/$version/+download/$release-$version.tar.gz" | \
-    sudo tar xz -C $src
+    url=$scheme://$host/$release/$name/$version/+download/$release-$version.tar.gz
+    curl -LSfs $url | sudo tar xz -C $src
   done
 }
 
