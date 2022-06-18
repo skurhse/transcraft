@@ -16,18 +16,18 @@ brewfile='
   cask "multipass"
 '
 
-releases=(
-  'cloud-init'
-)
-
 main() {
-  brew bundle --file=- <<<$brewfile
+  run_brew_bundle
   
-  make_dirs
+  make_local_dirs
   install_cloud-init
 }
 
-make_dirs() {
+run_brew_bundle() {
+  brew bundle --file=- <<<$brewfile
+}
+
+make_local_dirs() {
   sudo mkdir -p $src $bin
 }
 
@@ -45,23 +45,28 @@ install_cloud-init() {
   v_path+='."lp:ProductRelease"'
   v_path+='."lp:version"'
 
-  scheme=https
-  host=launchpad.net
-  name=trunk
+  scheme='https'
+  host='launchpad.net'
+  name='cloud-init'
+  release='trunk'
 
-  for release in "${releases[@]}"
+  resource=$(
+    url="$scheme://$host/$name/$release/+rdf"
+    curl -LSfs "$url" | xq -r "$r_path" 
+  )
+
+  version=$(
+    url="$scheme://$host$resource"
+    curl -LSfs "$url" | xq -r "$v_path"
+  )
+
+  url="$scheme://$host/$name/$release/$version/+download/$release-$version.tar.gz"
+  curl -LSfs "$url" | sudo tar xz -C "$src"
+
+  cd "$src"
+  for command in 'build' 'install'
   do
-    resource=$(
-      url=$scheme://$host/$release/$name/+rdf
-      curl -LSfs $url | xq -r "$r_path" 
-    )
-    version=$(
-      url=$scheme://$host$resource
-      curl -LSfs $url | xq -r "$v_path"
-    )
-
-    url=$scheme://$host/$release/$name/$version/+download/$release-$version.tar.gz
-    curl -LSfs $url | sudo tar xz -C $src
+    sudo python3 setup.py "$command"
   done
 }
 
