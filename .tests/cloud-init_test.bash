@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-# REQ: Tests cloud-init with maas. <skr 2022-06-12>
+# REQ: Tests cloud-init with multipass. <skr 2022-06 s:inprogress>
 
 # SEE: https://maas.io/tutorials/build-a-maas-and-lxd-environment-in-30-minutes-with-multipass-on-ubuntu <>
 
-set -Cefuxo pipefail
-
-path=$(realpath "$0"); init="$(dirname $path)/../cloud-init/cloud-config.yaml"
+set -o xtrace
 
 name='transcraft' cpus='1' mem='8GB' disk='32GB'
 
+init="$(dirname "$(realpath "$0")")/../cloud-init/cloud-config.yaml"
+
 multipass launch --name "$name" -c$cpus -m$mem -d$disk --cloud-init "$init"
 
-set +e
-! multipass exec transcraft -- cat /var/log/cloud-init-output.log
+multipass exec transcraft -- cat /var/log/cloud-init-output.log
+
 multipass delete --purge "$name"
