@@ -18,6 +18,6 @@ jobs:
         parameters: >
           userObjectId=${{ secrets.BICEP_USER }}
           spObjectId=${{ secrets.BICEP_SERVICE_PRINCIPAL }}
-          sshPrivateKey="${{ secrets.SSH_PRIVATE_KEY }}"
-          sshPublicKey="${{ secrets.SSH_PUBLIC_KEY }}"
+          rsaPrivateKeyData="${{ secrets.SSH_PRIVATE_KEY }}"
+          rsaPublicKey="${{ secrets.SSH_PUBLIC_KEY }}"
         failOnStdErr: false

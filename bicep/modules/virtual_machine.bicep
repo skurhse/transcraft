@@ -6,7 +6,7 @@ param adminUsername string
 
 param computerName string
 
-param sshPublicKey string
+param rsaPublicKey string
 
 param customData string
 
@@ -171,7 +171,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
           publicKeys: [
             {
               path: '/home/${adminUsername}/.ssh/authorized_keys'
-              keyData: sshPublicKey
+              keyData: rsaPublicKey
             }
           ]
         }

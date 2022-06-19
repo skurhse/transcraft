@@ -1,11 +1,82 @@
-@description('The Azure region into which the resources should be deployed.')
-param location string = 'westeurope'
+// SEE: https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts/microsoft.keyvault/key-vault-create-rbac <>
 
-@description('The virtual network name to use for the resources.')
-param vnetName string
+@description('The tenant id used by resources.')
+param tenant string
 
-resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' existing = {
-  name: vnetName
+@description('The location used by resources.')
+param location string
+
+@description('The deployment name used by resources.')
+param baseName string
+
+@description('The key vault tags map.')
+param baseTags object 
+
+@description('The principal object ids to be granted read access.')
+param admin string
+var adminRole = 'Key Vault Administrator'
+
+@description('The principal object ids to be granted read access.')
+param reader string
+var readerRole = 'Key Vault Reader'
+
+@description('The bastion private key data.')
+@secure()
+param bastionPrivateKeyData string
+
+var tags = union(baseTags, {module: 'keyVault'})
+
+var roleIdMapping = {
+  'Key Vault Administrator': '00482a5a-887f-4fb3-b363-3b7fe8e74483'
+  'Key Vault Reader': '21090545-7ca7-4776-b22c-e363652d74d2'
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
+  name: '${baseName}KeyVault'
+  location: location
+  tags: union(tags, {resource: 'keyVault'})
+  properties: {
+    enableRbacAuthorization: true
+    enableSoftDelete: false
+    networkAcls: {
+      defaultAction: 'Deny'
+      bypass: 'AzureServices'
+    }
+    publicNetworkAccess: 'disabled'
+    sku: { 
+      family: 'A'
+      name: 'standard'
+    }
+    tenantId: tenant
+  }
+}
+
+resource vaultSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
+  name: '/privateKey'
+  tags: tags
+  properties: {
+    value: bastionPrivateKeyData
+  }
+}
+
+resource vaultAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(roleIdMapping[adminRole],admin,keyVault.id)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleIdMapping[adminRole])
+    principalId: admin
+    principalType: 'ServicePrincipal'
+  }
+}
+
+resource vaultReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+  name: guid(roleIdMapping[readerRole],reader,keyVault.id)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleIdMapping[readerRole])
+    principalId: reader
+    principalType: 'User'
+  }
 }
 
 resource publicIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
