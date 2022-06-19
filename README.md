@@ -2,7 +2,17 @@
 
 A Minecraft server solution built on Actions, Azure, Ubuntu and QuiltMC.
 
-## Programs
+## Specifications
+
+- [Codetags](https://peps.python.org/pep-0350/)
+- [GitHub Flavored Markdown](https://github.github.com/gfm/)
+- [Semantic Versioning](https://semver.org/)
+
+## User Guides
+
+- [cloud-init - user-data formats](https://cloudinit.readthedocs.io/en/latest/topics/format.html)
+
+## Program Index
 
 - apt-get
   - [launchpad](https://salsa.debian.org/apt-team/apt)
@@ -63,10 +73,6 @@ A Minecraft server solution built on Actions, Azure, Ubuntu and QuiltMC.
 - systemd
   - [github](https://github.com/systemd/systemd)
 
-## Specifications
-
-- [GitHub Flavored Markdown Spec](https://github.github.com/gfm/)
-- [Semantic Versioning](https://semver.org/)
-
-##  Plugins
+<!-- TODO: Expand. s:inprogress> -->
+## Minecraft Resources
 - rcon

@@ -14,3 +14,7 @@ pipeline:
 .PHONY: get-ip
 get-ip:
 	az deployment group show -g $(GROUP) -n $(DEPL) --query $(JMES) -o tsv
+
+.PHONY: user-data
+user-data:
+	cloud-init devel -h
