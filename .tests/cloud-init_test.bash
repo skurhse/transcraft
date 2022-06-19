@@ -8,7 +8,7 @@ set -o xtrace
 
 name='transcraft' cpus='1' mem='8GB' disk='32GB'
 
-init="$(dirname "$(realpath "$0")")/../cloud-init/cloud-config.yaml"
+init="$(dirname "$(realpath "$0")")/../out/cloud-init.mime"
 
 multipass launch --name "$name" -c$cpus -m$mem -d$disk --cloud-init "$init"
 
