@@ -21,12 +21,7 @@ $(SSH_DIR): $(OUT_DIR)
 	mkdir $(SSH_DIR)
 
 $(MIME_FILE): $(OUT_DIR)
-	cloud-init devel make-mime \
-	  -a cloud-init/cloud-config/config.yaml:cloud-config \
-	  -a cloud-init/x-shellscript/per-boot.bash:x-shellscript-per-boot \
-	  -a cloud-init/x-shellscript/per-instance.bash:x-shellscript-per-instance \
-	  -a cloud-init/x-shellscript/per-once.bash:x-shellscript-per-once \
-	> $(OUT_DIR)/cloud-init.mime
+	make/mime-file.bash
 
 $(OUT_DIR):
 	mkdir $(OUT_DIR)
