@@ -12,7 +12,7 @@ az deployment group create \
   --resource_group "$RESOURCE_GROUP" \
   --template-file 'main.bicep' \
   --parameters \
-    user=${{ secrets.BICEP_USER }}
+    user=${{  }}
     servicePrincipal="$(cat $key)"
     publicKey="$(cat $key.pub)"
     privateKey="$(cat $key)"

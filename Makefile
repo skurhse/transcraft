@@ -1,18 +1,24 @@
 export RESOURCE_GROUP = transcraft
 
 OUT_DIR = out
+SSH_DIR = $(OUT_DIR)/ssh
+
+export SSH_PRIVATE_KEY = $(SSH_DIR)/id_rsa
+SSH_PUBLIC_KEY = $(SSH_PRIVATE_KEY).pub
+
 MIME_FILE = $(OUT_DIR)/cloud-init.mime
-
-.PHONY: run
-run:
-	scripts/$(NAME).bash
-
-.PHONY: cloud-init-test
-test-run: user-data
-	tests/cloud-init_test.bash
 
 .PHONY: user-data
 user-data: $(MIME_FILE)
+
+.PHONY: ssh-keys
+ssh-keys: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
+
+$(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &:
+	make/ssh-keys.bash
+
+$(SSH_DIR): $(OUT_DIR)
+	mkdir $(SSH_DIR)
 
 $(MIME_FILE): $(OUT_DIR)
 	cloud-init devel make-mime \
@@ -22,9 +28,9 @@ $(MIME_FILE): $(OUT_DIR)
 	  -a cloud-init/x-shellscript/per-once.bash:x-shellscript-per-once \
 	> $(OUT_DIR)/cloud-init.mime
 
+$(OUT_DIR):
+	mkdir $(OUT_DIR)
+
 .PHONY: deployment
 deployment: $(MIME_FILE)
 	bicep/deploy.bash
-
-$(OUT_DIR):
-	mkdir -p $(OUT_DIR)

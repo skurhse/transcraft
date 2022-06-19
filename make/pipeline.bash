@@ -14,14 +14,6 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-make_key() {
-  declare -Ag key=(
-    [type]='rsa'
-    [bits]='4096'
-    [email]='transcraft@transprogrammer.org'
-  )
-  key[file]=".ssh/id_${key[type]}"
-}
 
 make_group() {
   declare -Ag group=(
@@ -50,9 +42,6 @@ main() {
   if principal_exists; then delete_principal; fi
   create_group
 
-  make_key
-  generate_key
-
   # TODO: loop
   gh secret set SSH_PRIVATE_KEY < ${key[file]}
   gh secret set SSH_PUBLIC_KEY < ${key[file]}.pub
@@ -63,21 +52,6 @@ main() {
 
   gh secret set BICEP_SERVICE_PRINCIPAL -b "${principal[id]}"
   gh secret set BICEP_USER -b "$user_id"
-}
-
-generate_key() {
-  realpath=$(realpath "$0")
-  dirname=$(dirname "$realpath")
-  cd "$dirname/.."
-
-  ssh_dir=$(dirname "${key[file]}")
-  mkdir -p "$ssh_dir"
-  ssh-keygen \
-    -C "${key[email]}" \
-    -t "${key[type]}"  \
-    -b "${key[bits]}"  \
-    -f "${key[file]}"  \
-    -N ''
 }
 
 create_group() {
