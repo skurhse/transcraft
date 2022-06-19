@@ -1,25 +1,12 @@
-JMES = properties.outputs.minecraftPublicIP.value
-
-GROUP = transcraft
-DEPL = main
-
 OUT_DIR = out
 MIME_FILE = $(OUT_DIR)/cloud-init.mime
 
-.PHONY: get-ip
-get-ip:
-	az deployment group show -g $(GROUP) -n $(DEPL) --query $(JMES) -o tsv
+.PHONY: run
+run:
+	.scripts/$(NAME).bash
 
-.PHONY: pipeline
-pipeline:
-	.scripts/pipeline.bash
-
-.PHONY: setup
-setup:
-	.scripts/setup.bash
-
-.PHONY: test
-test: user-data
+.PHONY: cloud-init-test
+test-run: user-data
 	.tests/cloud-init_test.bash
 
 .PHONY: user-data
