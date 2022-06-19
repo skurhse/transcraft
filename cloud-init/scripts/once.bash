@@ -17,26 +17,6 @@ main() {
   handle_sshd
 }
 
-# name=${unit[name]} handle_unit
-
-# name=quilt-installer version=${versions[$name]} 
-
-#   declare -A release=(
-#     [name]='quilt-installer'
-#     [owner]='quiltmc'
-#     [repo]='quilt-installer'
-#     [version]='latest'
-#   )
-#   declare -A unit=(
-#     [owner]='quiltmc'
-#     [name]="$name"
-#   )
-#   declare dirs=('/quilt')
-
-#   make_dirs
-#   download_quilt_release
-#   handle_unit
-
 install_prometheus() {
   local name='prometheus' version='2.36.1'
 
@@ -135,10 +115,32 @@ install_minecraft_exporter() {
   handle_unit
 }
 
+install_quilt_installer() {
+   local name='quilt-installer' version='latest'
+
+  declare -A release=(
+    [delimiter]='-'
+    [name]="$name"
+    [owner]='quiltmc'
+    [repository]="$name"
+    [version]="$version"
+  )
+  release[archive]=$(download_quilt_release)
+
+  declare -A unit=(
+    [user]='quilt'
+    [group]='quilt'
+  )
+  local -a dirs=(
+    '/quilt'
+  )
+  make_dirs
+
+  handle_unit
+}
+
 download_github_release() {
-  for attr in "${!release[@]}"; do
-    local "$attr"="${release[$attr]}"
-  done
+  . <(release_source)
 
   local archive="$name$delimiter$version.linux-$architecture"
 
@@ -167,6 +169,34 @@ download_github_release() {
   printf "$archive"
 }
 
+download_quilt_release() {
+  . <(release_source)
+
+  local url="https://maven.quiltmc.org"
+
+  local archive="quilt-install-$version"
+
+  local segments=(
+    "repository"
+    "release"
+    "org"
+    "quiltmc"
+    "$name"
+    "latest"
+    "$archive.jar"
+  )
+
+  make_url
+
+  curl -LSfs "$url" > "$src/"
+}
+
+release_source() {
+  echo 'for attr in "${!release[@]}"; do
+    local "$attr"="${release[$attr]}"
+  done'
+}
+
 install_release_nodes() {
   for node in "${nodes[@]}"; do
     cp -r "$src/${release[name]}/$node" "$dir"
@@ -185,24 +215,6 @@ make_dirs() {
     mkdir -p "$dir"
     chown "${unit[user]}:${unit[group]}" "$dir"
   done
-}
-
-download_quilt_release() {
-  local url="https://maven.quiltmc.org"
-
-  local segments=(
-    "repository"
-    "release"
-    "org"
-    "quiltmc"
-    "$name"
-    "latest"
-    "quilt-installer-latest.jar"
-  )
-
-  make_url
-
-  curl -LSfs "$url" > "/quilt/server.jar"
 }
 
 handle_unit() {
