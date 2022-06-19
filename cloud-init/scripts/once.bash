@@ -2,157 +2,234 @@
 
 # REQ: Run-once script. <skr 2022-06>
 
-set -Cefuxo pipefail
+set -o nounset
+set -o xtrace
 
-architecture=$(dpkg --print-architecture)
+architecture="$(dpkg --print-architecture)"
 
-etc=/etc
-lib=/var/lib
-local=/usr/local
-bin=$local/bin
-src=$local/src
+etc='/etc' lib='/var/lib'
+local='/usr/local' bin="$local/bin" src="$local/src"
 
-set_archive() {
-local name=$1 version=$2 owner=$3 repo=$4 delim=${5--}
+main() {
+  install_prometheus
+  install_quilt
 
-archive=$name$delim$version.linux-$architecture
+  handle_sshd
+}
 
-local url=https://github.com/$owner/$repo/releases/download/v$version/$archive.tar.gz
+# name=${unit[name]} handle_unit
 
-if [ $mkdir = yes ]; then
-local src=$src/$archive
-mkdir -p $archive
-fi
+# name=quilt-installer version=${versions[$name]} 
 
-curl -LSfs $url | tar xz -C $src
+#   declare -A release=(
+#     [name]='quilt-installer'
+#     [owner]='quiltmc'
+#     [repo]='quilt-installer'
+#     [version]='latest'
+#   )
+#   declare -A unit=(
+#     [owner]='quiltmc'
+#     [name]="$name"
+#   )
+#   declare dirs=('/quilt')
+
+#   make_dirs
+#   download_quilt_release
+#   handle_unit
+
+install_prometheus() {
+  local name='prometheus' version='2.36.1'
+
+  local -A release=(
+    [delimiter]='-'
+    [name]="$name"
+    [owner]="$name"
+    [repository]="$name"
+    [version]="$version"
+  )
+  release[archive]=$(download_github_release)
+
+  local -A unit=(
+    [group]="$name"
+    [name]="$name"
+    [user]="$name"
+  )
+  local -A dirs=(
+    [etc]='/etc/prometheus'
+    [lib]='/var/lib/prometheus'
+  )
+  make_dirs
+
+  local nodes=(
+    'prometheus'
+    'promtool'
+  )
+  local dir="$bin"
+  install_release_nodes
+
+  local nodes=(
+    'consoles'
+    'console_libraries'
+    'prometheus.yml'
+  )
+  local dir="${dirs[etc]}"
+  install_release_nodes
+
+  handle_unit
+
+  install_node_exporter
+  install_minecraft_exporter
+}
+
+install_node_exporter() {
+  local name='node_exporter' version='1.3.1'
+
+  local -A release=(
+    [delimiter]='-'
+    [name]="$name"
+    [owner]='prometheus'
+    [repository]="$name"
+    [version]="$version"
+  )
+  release[archive]=$(download_github_release)
+
+  local -A unit=(
+    [group]="$name"
+    [name]="$name"
+    [user]="$name"
+  )
+
+  local -a nodes=(
+    "$name"
+  )
+  local dir="$bin"
+  install_release_nodes
+
+  handle_unit
+}
+
+install_minecraft_exporter() {
+  name='minecraft-exporter' version='0.13.0'
+
+  local -A release=(
+    [delimiter]='_'
+    [name]="$name"
+    [owner]='dirien'
+    [repository]='minecraft-prometheus-exporter'
+    [version]="$version"
+  )
+  release[archive]=$(mkdir=yes download_github_release)
+
+  local -A unit=(
+    [user]="$name"
+    [group]="$name"
+    [name]="$name"
+  )
+
+  local -a nodes=(
+    "$name"
+  )
+  dir=$bin
+  install_release_nodes
+
+  handle_unit
+}
+
+download_github_release() {
+  for attr in "${!release[@]}"; do
+    local "$attr"="${release[$attr]}"
+  done
+
+  local archive="$name$delimiter$version.linux-$architecture"
+
+  local url="https://github.com"
+
+  local segments=(
+    "$owner"
+    "$repository"
+    "releases"
+    "download"
+    "v$version"
+    "$archive.tar.gz"
+  )
+
+  make_url
+
+  if [[ ${mkdir-no} == 'yes' ]]; then
+    local src
+    src="$src/$archive"
+
+    mkdir -p "$archive"
+  fi
+
+  curl -LSfs "$url" | tar xz -C "$src"
+
+  printf "$archive"
+}
+
+install_release_nodes() {
+  for node in "${nodes[@]}"; do
+    cp -r "$src/${release[name]}/$node" "$dir"
+    chown -R "${unit[user]}:${unit[group]}" "$dir/$node"
+  done
+}
+
+make_url() {
+  for segment in "${segments[@]}"; do
+    url+="/$segment"
+  done
 }
 
 make_dirs() {
-local user=$1 group=$2
-
-for dir in ${dirs[@]}; do
-mkdir $dir
-chown $user:$group $dir
-done
+  for dir in "${dirs[@]}"; do
+    mkdir -p "$dir"
+    chown "${unit[user]}:${unit[group]}" "$dir"
+  done
 }
 
 download_quilt_release() {
-url=https://maven.quiltmc.org/repository/release/org/quiltmc/$name/latest/quilt-installer-latest.jar
+  local url="https://maven.quiltmc.org"
 
-curl -sLSf $url > /quilt/server.jar
-echo "eula=true" > /minecraft/eula.txt
-mv /tmp/server.properties /minecraft/server.properties
-chmod a+rwx /minecraft
+  local segments=(
+    "repository"
+    "release"
+    "org"
+    "quiltmc"
+    "$name"
+    "latest"
+    "quilt-installer-latest.jar"
+  )
 
+  make_url
+
+  curl -LSfs "$url" > "/quilt/server.jar"
 }
-
-install_nodes() {
-for node in ${nodes[@]}
-do
-cp -r $src/${release[name]}/$node $dir
-chown -R ${unit[owner]}:${unit[group]} $dir/$node
-done
-}
-
 
 handle_unit() {
-systemctl daemon-reload
-systemctl start $1
-systemctl enable $1
+  local name=${unit[name]}
+
+  systemctl daemon-reload
+  systemctl start "$name"
+  systemctl enable "$name"
 }
 
-configure_iptables() {
-iptables -I INPUT -j ACCEPT
+handle_iptables() {
+  iptables -I INPUT -j ACCEPT
 
-# iptables -A INPUT -p tcp -m state --state NEW --dport 25555 -j ACCEPT
-# iptables-save
-# dpkg-reconfigure iptables-persistent
+  # iptables -A INPUT -p tcp -m state --state NEW --dport 25555 -j ACCEPT
+  # iptables-save
+  # dpkg-reconfigure iptables-persistent
 
-# iptables -P INPUT DROP
-# iptables -P OUTPUT DROP
-# iptables -P FORWARD DROP
+  # iptables -P INPUT DROP
+  # iptables -P OUTPUT DROP
+  # iptables -P FORWARD DROP
 }
 
-declare -A unit=(
-[user]=$name
-[group]=$name
-[name]=$name
-)
+handle_sshd() {
+  sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
+  service sshd restart
 
-archive=
-set_archive prometheus 2.36.1 prometheus prometheus
+  systemctl restart fail2ban
+}
 
-declare -A dirs=(
-[etc]=/etc/prometheus
-[lib]=/var/lib/prometheus
-)
-make_dirs
-
-nodes=(
-prometheus
-promtool
-)
-dir=$bin
-install_from_source
-
-nodes=(
-consoles
-console_libraries
-prometheus.yml
-)
-dir=${dirs[etc]}
-install_from_source
-
-handle_unit
-
-declare -A release=(
-[owner]=prometheus
-[repo]=node_exporter
-[version]=1.3.1
-)
-download_release
-
-declare -A unit=(
-[owner]=$name
-[group]=$name
-[name]=$name
-)
-declare -a programs=($name)
-
-download_github_release
-nodes=${programs[@]} dir=$bin install_from_source
-name=${unit[name]} handle_unit
-
-
-version=${versions[$name]}
-
-declare -A release=([owner]=dirien [repo]=minecraft-prometheus-exporter [version]=$version)
-declare -A unit=([owner]=$name [group]=$name [name]=$name)
-declare -a programs=($name)
-
-mkdir=yes delim=_ download_github_release
-nodes=${programs[@]} dir=$bin install_from_source
-name=${unit[name]} handle_unit
-
-
-name=quilt-installer version=${versions[$name]} 
-
-declare -A release=(
-[name]=quilt-installer
-[owner]=quiltmc
-[repo]=quilt-installer
-[version]=latest
-)
-declare -A unit=([owner]=quiltmc [name]=$name)
-delcare dirs=(/quilt)
-
-make_dirs
-download_quilt_release
-handle_unit
-
-
-sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
-service sshd restart
-
-
-systemctl restart fail2ban
+main

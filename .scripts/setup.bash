@@ -9,6 +9,7 @@ local='/usr/local' src="$local/src" bin="$local/bin"
 brewfile='
   brew "azure-cli"
   brew "bash"
+  brew "dpkg"
   brew "gh"
   brew "gnu-tar"
   brew "yq"
