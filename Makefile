@@ -1,13 +1,15 @@
+export RESOURCE_GROUP = transcraft
+
 OUT_DIR = out
 MIME_FILE = $(OUT_DIR)/cloud-init.mime
 
 .PHONY: run
 run:
-	.scripts/$(NAME).bash
+	scripts/$(NAME).bash
 
 .PHONY: cloud-init-test
 test-run: user-data
-	.tests/cloud-init_test.bash
+	tests/cloud-init_test.bash
 
 .PHONY: user-data
 user-data: $(MIME_FILE)
@@ -19,6 +21,10 @@ $(MIME_FILE): $(OUT_DIR)
 	  -a cloud-init/x-shellscript/per-instance.bash:x-shellscript-per-instance \
 	  -a cloud-init/x-shellscript/per-once.bash:x-shellscript-per-once \
 	> $(OUT_DIR)/cloud-init.mime
+
+.PHONY: deployment
+deployment: $(MIME_FILE)
+	bicep/deploy.bash
 
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
