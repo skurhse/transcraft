@@ -25,9 +25,16 @@ param publicKey string
 @description('The private key data used for SSH access to the virtual machine.')
 param privateKey string
 
+module virtualNetwork 'modules/virtual_network.bicep' = {
+  name: '${name}VirtualNetwork'
+  params: {
+    name: '${name}-virtual-network'
+    location: location
+  }
+}
 
-module keyVault 'modules/bastion.bicep' = {
-  name: '${name}KeyVault'
+module bastionHost 'modules/bastion_host.bicep' = {
+  name: '${name}BastionHost'
   params: {
     tenant: tenant
     location: location
@@ -39,22 +46,8 @@ module keyVault 'modules/bastion.bicep' = {
     reader: user
 
     privateKey: privateKey
-  }
-}
 
-module virtualNetwork 'modules/virtual_network.bicep' = {
-  name: '${name}VirtualNetwork'
-  params: {
-    name: '${name}-virtual-network'
-    location: location
-  }
-}
-
-module bastionHost 'modules/bastion.bicep' = {
-  name: '${name}BastionHost'
-  params: {
-    location: location
-    vnetName: virtualNetwork.outputs.vnetName
+    virtualNetwork: virtualNetwork.outputs.vnetName
   }
 }
 
@@ -62,11 +55,11 @@ module virtualMachine 'modules/virtual_machine.bicep' = {
   name: name
   params: {
     location: location
-    vnetName: minecraftVnet.outputs.vnetName
+    vnetName: virtualNetwork.outputs.vnetName
     adminUsername: 'minecraft'
     computerName: name
-    rsaPublicKey: rsaPublicKey
-    customData: loadFileAsdeployment64('../cloud-init/cloud-config.yaml')
+    rsaPublicKey: publicKey
+    customData: loadFileAsBase64('../out/cloud-init.mime')
   }
 }
 

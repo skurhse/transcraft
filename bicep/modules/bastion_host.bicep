@@ -6,29 +6,36 @@ param tenant string
 @description('The location used by resources.')
 param location string
 
-@description('The deployment name used by resources.')
+@description('The base name used by resources.')
 param baseName string
 
-@description('The key vault tags map.')
+@description('The base tag used by resources.')
 param baseTags object 
 
-@description('The principal object ids to be granted read access.')
+@description('The service principal id to be granted adminstrative access.')
 param admin string
 var adminRole = 'Key Vault Administrator'
 
-@description('The principal object ids to be granted read access.')
+@description('The user principal id to be granted read access.')
 param reader string
 var readerRole = 'Key Vault Reader'
 
-@description('The bastion private key data.')
+@description('The private key data to be used with bastion.')
 @secure()
-param bastionPrivateKeyData string
+param privateKey string
+
+@description('The name of the existing virtual network resource.')
+param virtualNetwork string
 
 var tags = union(baseTags, {module: 'keyVault'})
 
 var roleIdMapping = {
   'Key Vault Administrator': '00482a5a-887f-4fb3-b363-3b7fe8e74483'
   'Key Vault Reader': '21090545-7ca7-4776-b22c-e363652d74d2'
+}
+
+resource network 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
+  name: virtualNetwork
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
@@ -53,13 +60,13 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
 
 resource vaultSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
   name: '/privateKey'
-  tags: tags
+  tags: union(tags, {resource: 'vaultSecret'})
   properties: {
-    value: bastionPrivateKeyData
+    value: privateKey
   }
 }
 
-resource vaultAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource vaultAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   name: guid(roleIdMapping[adminRole],admin,keyVault.id)
   scope: keyVault
   properties: {
@@ -69,7 +76,7 @@ resource vaultAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-
   }
 }
 
-resource vaultReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource vaultReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
   name: guid(roleIdMapping[readerRole],reader,keyVault.id)
   scope: keyVault
   properties: {
@@ -79,7 +86,7 @@ resource vaultReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2020
   }
 }
 
-resource publicIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
+resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2021-08-01' = {
   name: 'bastion-${uniqueString(resourceGroup().id)}-pip'
   location: location
   tags: {
@@ -95,7 +102,7 @@ resource publicIp 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
   }
 }
 
-resource bastionHost 'Microsoft.Network/bastionHosts@2021-05-01' = {
+resource bastionHost 'Microsoft.Network/bastionHosts@2021-08-01' = {
   name: 'bastion-${uniqueString(resourceGroup().id)}-bh'
   location: location
   tags: {
@@ -108,10 +115,10 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2021-05-01' = {
         name: 'IpConf'
         properties: {
           subnet: {
-            id: vnet.properties.subnets[1].id
+            id: network.properties.subnets[1].id
           }
           publicIPAddress: {
-            id: publicIp.id
+            id: publicIpAddress.id
           }
         }
       }
