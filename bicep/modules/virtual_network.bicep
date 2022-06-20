@@ -19,7 +19,7 @@ var subnetAddressPrefix = '10.0.0.0/16'
 @description(' The tags used by resources.')
 var moduleTags = union(tags, {module: 'virtualNetwork'})
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-03-01' = {
   name: '${name}VirtualNetwork'
   location: location
   tags: union(moduleTags, {resource: 'virtualNetwork'})
