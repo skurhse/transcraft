@@ -61,7 +61,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
 }
 
 resource vaultSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
-  name: '/privateKey'
+  name: '${keyVault.name}/${baseName}privateKey'
   tags: union(tags, {resource: 'vaultSecret'})
   properties: {
     value: privateKey
