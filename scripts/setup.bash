@@ -12,6 +12,7 @@ brewfile='
   brew "dpkg"
   brew "gh"
   brew "gnu-tar"
+  brew "openjdk"
   brew "yq"
   
   cask "multipass"

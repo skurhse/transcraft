@@ -115,6 +115,10 @@ install_minecraft_exporter() {
   handle_unit
 }
 
+install_quilt() {
+  install_quilt_installer
+}
+
 install_quilt_installer() {
    local name='quilt-installer' version='latest'
 
@@ -158,8 +162,9 @@ download_github_release() {
   make_url
 
   if [[ ${mkdir-no} == 'yes' ]]; then
+    local old_src="$src"
     local src
-    src="$src/$archive"
+    src="$old_src/$archive"
 
     mkdir -p "$archive"
   fi

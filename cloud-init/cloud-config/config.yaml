@@ -139,7 +139,7 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /etc/systemd/system/quilt.service
+  - path: /etc/systemd/system/quilt
     content: |
       [Unit]
       Description=The Quilt Project
@@ -147,7 +147,7 @@ write_files:
       DefaultDependencies=no
       After=network.target
       [Service]
-      WorkingDirectory=/quilt
+      WorkingDirectory=/usr/local/lib/quilt
       Type=simple
       ExecStart=/usr/bin/java -Xmx4G -Xms4G -jar server.jar nogui
       Restart=on-failure
@@ -163,6 +163,3 @@ write_files:
       maxretry = 3
       bantime = 1000
       ignoreip = 
-
-runcmd:
-  - [ /bin/bash, /run/cloud-init.bash ]
