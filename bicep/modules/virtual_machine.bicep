@@ -85,14 +85,11 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2021-05-0
   }
 }
 
-resource publicIP 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
-  name: '${name}-${uniqueString(resourceGroup().id)}-pip'
+resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
+  name: '${name}PublicIpAddress'
   location: location
-  tags: {
-    'app': 'minecraft'
-    'name': name
-    'resources': 'publicIP'
-  }
+  tags: union(moduleTags, {resource: 'publicIpAddress'})
+
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
@@ -102,28 +99,22 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
   }
 }
 
-output minecraftPublicIP string = publicIP.properties.ipAddress
-
-
-resource nic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
+resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = {
   name: '${name}-${uniqueString(resourceGroup().id)}-nic'
   location: location
-  tags: {
-    'app': 'minecraft'
-    'name': name
-    'resources': 'nic'
-  }
+  tags: union(moduleTags, {resource: 'networkInterface'})
+
   properties: {
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: virtualNetwork.properties.subnets[0].id
+            id: subnet.id
           }
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: publicIP.id
+            id: publicIpAddress.id
           }
         }
       }
@@ -134,7 +125,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
   }
 }
 
-resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
+resource virtualMachine 'Microsoft.Compute/virtualMachines@2021-07-01' = {
   name: '${name}-${uniqueString(resourceGroup().id)}-vm'
   location: location
   tags: {
@@ -168,7 +159,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
     networkProfile: {
       networkInterfaces: [
         {
-          id: nic.id
+          id: networkInterface.id
           properties: {
             primary: true
           }
@@ -195,3 +186,5 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
     }
   }
 }
+
+output minecraftPublicIP string = publicIpAddress.properties.ipAddress

@@ -41,8 +41,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' existing 
   name: network
 }
 
+// NOTE: Must be AzureBastionSubnet. <skr 2022-06>
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-08-01' = {
-  name: '${virtualNetwork.name}/${name}Subnet-BastionHost'
+  name: '${virtualNetwork.name}/AzureBastionSubnet'
   properties: {
     addressPrefix: bastionSubnetIpPrefix
   }
