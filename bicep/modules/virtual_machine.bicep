@@ -1,26 +1,34 @@
+@description('The location used by resources.')
 param location string
 
-param vmSize string = 'Standard_D2_v2'
+@description('The base name used by resources.')
+param name string
+
+@description('The base tags used by resources.')
+param tags object
+
+@description('The preexisting virtual network name.')
+param virtualNetwork string
+
+var vmSize = 'Standard_D2_v2'
 
 param adminUsername string
-
-param computerName string
 
 param rsaPublicKey string
 
 param customData string
 
-@description('The virtual network name to use for the resources.')
-param vnetName string
+var moduleTags = union(tags, {module: 'virtualMachine'})
 
-resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: '${computerName}-${uniqueString(resourceGroup().id)}-nsg'
+resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
+  name: virtualNetwork 
+}
+
+resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
+  name: '${name}NetworkSecurityGroup'
   location: location
-  tags: {
-    'app': 'minecraft'
-    'name': computerName
-    'resources': 'nsg'
-  }
+  tags: union(moduleTags, {resource: 'networkSecurityGroup'})
+
   properties: {
     securityRules: [
       {
@@ -67,11 +75,11 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
 }
 
 resource publicIP 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
-  name: '${computerName}-${uniqueString(resourceGroup().id)}-pip'
+  name: '${name}-${uniqueString(resourceGroup().id)}-pip'
   location: location
   tags: {
     'app': 'minecraft'
-    'name': computerName
+    'name': name
     'resources': 'publicIP'
   }
   properties: {
@@ -85,16 +93,13 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2021-05-01' = {
 
 output minecraftPublicIP string = publicIP.properties.ipAddress
 
-resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
-  name: vnetName
-}
 
 resource nic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
-  name: '${computerName}-${uniqueString(resourceGroup().id)}-nic'
+  name: '${name}-${uniqueString(resourceGroup().id)}-nic'
   location: location
   tags: {
     'app': 'minecraft'
-    'name': computerName
+    'name': name
     'resources': 'nic'
   }
   properties: {
@@ -113,17 +118,17 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
       }
     ]
     networkSecurityGroup: {
-      id: nsg.id
+      id: networkSecurityGroup.id
     }
   }
 }
 
 resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
-  name: '${computerName}-${uniqueString(resourceGroup().id)}-vm'
+  name: '${name}-${uniqueString(resourceGroup().id)}-vm'
   location: location
   tags: {
     'app': 'minecraft'
-    'name': computerName
+    'name': name
     'vmSize': vmSize
     'resources': 'virtualMachine'
   }
@@ -134,7 +139,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
     storageProfile: {
       osDisk: {
         createOption: 'FromImage'
-        name: '${computerName}-${uniqueString(resourceGroup().id)}-disk'
+        name: '${name}-${uniqueString(resourceGroup().id)}-disk'
         diskSizeGB: 30
       }
       imageReference: {
@@ -160,7 +165,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
       ]
     }
     osProfile: {
-      computerName: computerName
+      computerName: name
       adminUsername: adminUsername
       customData: customData
       linuxConfiguration: {

@@ -7,10 +7,10 @@ param tenant string
 param location string
 
 @description('The base name used by resources.')
-param baseName string
+param name string
 
 @description('The base tag used by resources.')
-param baseTags object 
+param tags object 
 
 @description('The service principal id to be granted adminstrative access.')
 param admin string
@@ -27,9 +27,7 @@ param privateKey string
 @description('The name of the existing virtual network resource.')
 param virtualNetwork string
 
-var tags = union(baseTags, {
-  module: 'keyVault'
-})
+var moduleTags = union(tags, {module: 'keyVault'})
 
 var roleIdMapping = {
   'Key Vault Administrator': '00482a5a-887f-4fb3-b363-3b7fe8e74483'
@@ -41,9 +39,9 @@ resource network 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
-  name: '${baseName}KeyVault'
+  name: '${name}KeyVault'
   location: location
-  tags: union(tags, {resource: 'keyVault'})
+  tags: union(moduleTags, {resource: 'keyVault'})
   properties: {
     enableRbacAuthorization: true
     enableSoftDelete: false
@@ -61,8 +59,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
 }
 
 resource vaultSecret 'Microsoft.KeyVault/vaults/secrets@2021-11-01-preview' = {
-  name: '${keyVault.name}/${baseName}privateKey'
-  tags: union(tags, {resource: 'vaultSecret'})
+  name: '${keyVault.name}/${name}privateKey'
+  tags: union(moduleTags, {resource: 'vaultSecret'})
   properties: {
     value: privateKey
   }

@@ -1,18 +1,3 @@
-
-@description('The tenant identifier used by modules.')
-param tenant string = subscription().tenantId
-
-@description('The location used by modules.')
-param location string = resourceGroup().location
-
-@description('The base name used by modules.')
-param name string = 'transcraft'
-
-@description('The deployment tags used by modules.')
-param tags object = {
-  deployment: name
-}
-
 @description('The service principal object id responsible for deployment.')
 param servicePrincipal string
 
@@ -23,13 +8,30 @@ param user string
 param publicKey string
 
 @description('The private key data used for SSH access to the virtual machine.')
+@secure()
 param privateKey string
+
+@description('The location used by modules.')
+param location string = resourceGroup().location
+
+@description('The tenant identifier used by modules.')
+var tenant = subscription().tenantId
+
+@description('The base name used by modules.')
+var name = 'transcraft'
+
+@description('The deployment tags used by modules.')
+var tags = {
+  deployment: name
+}
 
 module virtualNetwork 'modules/virtual_network.bicep' = {
   name: '${name}VirtualNetwork'
   params: {
-    name: '${name}-virtual-network'
     location: location
+
+    name: name
+    tags: tags
   }
 }
 
@@ -39,25 +41,28 @@ module bastionHost 'modules/bastion_host.bicep' = {
     tenant: tenant
     location: location
 
-    baseName: name
-    baseTags: tags
+    name: name
+    tags: tags
+
+    virtualNetwork: virtualNetwork.outputs.name
 
     admin: servicePrincipal
     reader: user
-
     privateKey: privateKey
-
-    virtualNetwork: virtualNetwork.outputs.vnetName
   }
 }
 
 module virtualMachine 'modules/virtual_machine.bicep' = {
-  name: name
+  name: '${name}VirtualMachine'
   params: {
     location: location
-    vnetName: virtualNetwork.outputs.vnetName
+
+    name: name
+    tags: tags
+
+    virtualNetwork: virtualNetwork.outputs.name
+
     adminUsername: 'minecraft'
-    computerName: name
     rsaPublicKey: publicKey
     customData: loadFileAsBase64('../out/cloud-init.mime')
   }

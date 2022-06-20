@@ -1,13 +1,14 @@
-@description('The name of the virtual network.')
-param name string
-
-@description('The location name used by resources.')
+@description('The location used by resources.')
 param location string
 
+@description('The base name used by resources.')
+param name string
 
+@description('The base tags used by resources.')
+param tags object
 
 @description('The bastion subnet ip prefix.')
-param bastionSubnetIpPrefix string = '10.1.1.0/27'
+var bastionSubnetIpPrefix = '10.1.1.0/27'
 
 @description('The address prefixes of the network interfaces.')
 var addressPrefix = '10.0.0.0/8'
@@ -15,13 +16,14 @@ var addressPrefix = '10.0.0.0/8'
 @description('The address prefixes of the subnets to create.')
 var subnetAddressPrefix = '10.0.0.0/16'
 
-resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: 'vnet-${uniqueString(resourceGroup().id)}'
+@description(' The tags used by resources.')
+var moduleTags = union(tags, {module: 'virtualNetwork'})
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' = {
+  name: '${name}VirtualNetwork'
   location: location
-  tags: {
-    'app': 'minecraft'
-    'resources': 'vnet'
-  }
+  tags: union(moduleTags, {resource: 'virtualNetwork'})
+
   properties: {
     addressSpace: {
       addressPrefixes: [
@@ -45,4 +47,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
   }
 }
 
-output vnetName string = vnet.name
+output name string = virtualNetwork.name
