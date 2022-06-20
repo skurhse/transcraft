@@ -1,4 +1,5 @@
 export RESOURCE_GROUP = transcraft
+export LOCATION = centralus
 
 export SERVICE_PRINCIPAL = github_actions
 

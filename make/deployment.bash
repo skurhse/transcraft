@@ -9,6 +9,7 @@ main() {
 
   service_principal_id=$(get_service_principal_id)
 
+  create_resource_group
   create_deployment
 }
 
@@ -26,6 +27,10 @@ get_service_principal_id() {
   else
     exit 1
   fi
+}
+
+create_resource_group() {
+  az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 }
 
 create_deployment() {
