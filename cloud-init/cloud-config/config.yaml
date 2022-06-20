@@ -7,6 +7,8 @@ users:
     shell: /bin/false
   - name: minecraft-exporter
     shell: /bin/false
+  - name: quilt
+    shell: /bin/false
 
 package_update: true
 
@@ -139,7 +141,7 @@ write_files:
       [Install]
       WantedBy=multi-user.target
 
-  - path: /etc/systemd/system/quilt
+  - path: /etc/systemd/system/quilt.service
     content: |
       [Unit]
       Description=The Quilt Project
