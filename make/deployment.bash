@@ -36,7 +36,7 @@ create_resource_group() {
 create_deployment() {
   az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
-    --template-file 'bicep/main.bicep' \
+    --template-file 'bicep/transcraft.bicep' \
     --parameters \
       user="$user_id" \
       servicePrincipal="$service_principal_id" \
