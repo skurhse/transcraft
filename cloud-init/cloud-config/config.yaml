@@ -149,7 +149,7 @@ write_files:
       [Service]
       User=quilt
       Group=quilt
-      WorkingDirectory=/usr/local/lib/quilt
+      WorkingDirectory=/usr/local/lib/quilt/server
       Type=simple
       ExecStart=/usr/bin/java -Xmx4G -Xms4G -jar quilt-server-launch.jar nogui
       Restart=on-failure

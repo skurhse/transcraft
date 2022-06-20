@@ -7,20 +7,19 @@ set -o xtrace
 
 lib='/usr/local/lib/quilt'
 
-name='quilt'
-version='1.19'
+name='quilt' version='1.19'
 
 main() {
-  download_installer
+  installer=$(download_installer)
   run_installer
-  handle_unit
+  handle_service
 }
 
 download_installer() {
   local name='quilt-installer'
   local version='latest'
   local url="https://maven.quiltmc.org"
-  local archive="quilt-installer-$version.jar"
+  local installer="quilt-installer-$version.jar"
 
   mkdir -p "$lib"
 
@@ -31,27 +30,30 @@ download_installer() {
     "quiltmc"
     "$name"
     "$version"
-    "$archive"
+    "$installer"
   )
 
   for segment in "${segments[@]}"; do
     url+="/$segment"
   done
 
-  curl -LSfs "$url" > "$lib/$archive"
+  curl -LSfs "$url" > "$lib/$installer"
+
+  echo "$installer"
 }
 
 run_installer() {
-  java -jar "$lib/$archive" install server "$minecraft_version" \
+  java -jar "$lib/$installer" install server "$version" \
     --download-server \
-    --install-dir="$lib"
-  chown -R "${unit[user]}:${unit[group]}" "$lib"
+    --install-dir="$lib/server"
+
+  chown -R "$name:$name" "$lib/server"
 }
 
 handle_service() {
   systemctl daemon-reload
-  systemctl start "${unit[name]}"
-  systemctl enable "${unit[name]}"
+  systemctl start "$name"
+  systemctl enable "$name"
 }
 
 main

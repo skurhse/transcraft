@@ -23,7 +23,7 @@ $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &:
 $(SSH_DIR): $(OUT_DIR)
 	mkdir $(SSH_DIR)
 
-$(MIME_FILE): $(OUT_DIR)
+$(MIME_FILE): $(OUT_DIR) cloud-init/*/*
 	make/mime-file.bash
 
 $(OUT_DIR):

@@ -9,9 +9,9 @@ main() {
 
  	cloud-init devel make-mime \
 	  -a cloud-init/cloud-config/config.yaml:cloud-config \
-	  -a cloud-init/x-shellscript/per-boot.bash:x-shellscript-per-boot \
-	  -a cloud-init/x-shellscript/per-instance.bash:x-shellscript-per-instance \
-	  -a cloud-init/x-shellscript/per-once.bash:x-shellscript-per-once \
+	  -a cloud-init/x-shellscript/per-instance/install_quilt.bash:x-shellscript-per-instance \
+	  -a cloud-init/x-shellscript/per-instance/configure_iptables.bash:x-shellscript-per-instance \
+	  -a cloud-init/x-shellscript/per-instance/configure_sshd.bash:x-shellscript-per-instance \
 	> "$MIME_FILE"
 }
 
