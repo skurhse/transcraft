@@ -27,7 +27,9 @@ param privateKey string
 @description('The name of the existing virtual network resource.')
 param virtualNetwork string
 
-var tags = union(baseTags, {module: 'keyVault'})
+var tags = union(baseTags, {
+  module: 'keyVault'
+})
 
 var roleIdMapping = {
   'Key Vault Administrator': '00482a5a-887f-4fb3-b363-3b7fe8e74483'
