@@ -8,7 +8,7 @@ param name string
 param tags object
 
 @description('The preexisting virtual network name.')
-param virtualNetwork string
+param network string
 
 @description('The public key to be installed.')
 param publicKey string
@@ -21,8 +21,18 @@ param customData string
 
 var moduleTags = union(tags, {module: 'virtualMachine'})
 
-resource network 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
-  name: virtualNetwork 
+@description('The address prefixes of the subnets to create.')
+var subnetAddressPrefix = '10.0.0.0/16'
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
+  name: network 
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-08-01' = {
+  name: '${virtualNetwork.name}/${name}Subnet-VirtualMachine'
+  properties: {
+    addressPrefix: subnetAddressPrefix
+  }
 }
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
@@ -109,7 +119,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: network.properties.subnets[0].id
+            id: virtualNetwork.properties.subnets[0].id
           }
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {

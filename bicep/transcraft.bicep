@@ -44,7 +44,7 @@ module bastionHost 'modules/bastion_host.bicep' = {
     name: name
     tags: tags
 
-    virtualNetwork: virtualNetwork.outputs.name
+    network: virtualNetwork.outputs.name
 
     admin: servicePrincipal
     reader: user
@@ -60,7 +60,7 @@ module virtualMachine 'modules/virtual_machine.bicep' = {
     name: name
     tags: tags
 
-    virtualNetwork: virtualNetwork.outputs.name
+    network: virtualNetwork.outputs.name
 
     adminUsername: 'minecraft'
     publicKey: publicKey

@@ -12,30 +12,40 @@ param name string
 @description('The base tag used by resources.')
 param tags object 
 
+@description('The private key data to be used with bastion.')
+@secure()
+param privateKey string
+
+@description('The name of the existing virtual network resource.')
+param network string
+
+var moduleTags = union(tags, {module: 'keyVault'})
+
 @description('The service principal id to be granted adminstrative access.')
 param admin string
 var adminRole = 'Key Vault Administrator'
 
 @description('The user principal id to be granted read access.')
 param reader string
-var readerRole = 'Key Vault Reader'
-
-@description('The private key data to be used with bastion.')
-@secure()
-param privateKey string
-
-@description('The name of the existing virtual network resource.')
-param virtualNetwork string
-
-var moduleTags = union(tags, {module: 'keyVault'})
+var readerRole = 'Key Vault Secrets User'
 
 var roleIdMapping = {
   'Key Vault Administrator': '00482a5a-887f-4fb3-b363-3b7fe8e74483'
-  'Key Vault Reader': '21090545-7ca7-4776-b22c-e363652d74d2'
+  'Key Vault Secrets User': '4633458b-17de-408a-b874-0445c86b69e6'
 }
 
-resource network 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
-  name: virtualNetwork
+@description('The bastion subnet ip prefix.')
+var bastionSubnetIpPrefix = '10.1.1.0/27'
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
+  name: network
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-08-01' = {
+  name: '${virtualNetwork.name}/${name}Subnet-BastionHost'
+  properties: {
+    addressPrefix: bastionSubnetIpPrefix
+  }
 }
 
 resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
@@ -115,7 +125,7 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2021-08-01' = {
         name: 'IpConf'
         properties: {
           subnet: {
-            id: network.properties.subnets[1].id
+            id: subnet.id
           }
           publicIPAddress: {
             id: publicIpAddress.id
