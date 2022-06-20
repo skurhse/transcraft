@@ -14,7 +14,6 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-
 make_group() {
   declare -Ag group=(
     [name]='transcraft'
