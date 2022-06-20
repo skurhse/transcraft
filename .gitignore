@@ -1,5 +1,4 @@
-/.ssh/
-/.vscode/
-/out/
-
-test.log
+.ssh/
+.vscode/
+out/
+*.log

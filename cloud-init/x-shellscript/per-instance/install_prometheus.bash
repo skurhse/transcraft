@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# REQ: Run-once script. <skr 2022-06>
+# REQ: Install prometheus services. <skr 2022-06>
 
 set -o nounset
 set -o xtrace
@@ -12,9 +12,8 @@ local='/usr/local' bin="$local/bin" src="$local/src"
 
 main() {
   install_prometheus
-  install_quilt
-
-  handle_sshd
+  install_node_exporter
+  install_minecraft_exporter
 }
 
 install_prometheus() {
@@ -27,7 +26,7 @@ install_prometheus() {
     [repository]="$name"
     [version]="$version"
   )
-  release[archive]=$(download_github_release)
+  release[archive]=$(download_release)
 
   local -A unit=(
     [group]="$name"
@@ -56,9 +55,6 @@ install_prometheus() {
   install_release_nodes
 
   handle_unit
-
-  install_node_exporter
-  install_minecraft_exporter
 }
 
 install_node_exporter() {
@@ -71,7 +67,7 @@ install_node_exporter() {
     [repository]="$name"
     [version]="$version"
   )
-  release[archive]=$(download_github_release)
+  release[archive]=$(download_release)
 
   local -A unit=(
     [group]="$name"
@@ -98,7 +94,7 @@ install_minecraft_exporter() {
     [repository]='minecraft-prometheus-exporter'
     [version]="$version"
   )
-  release[archive]=$(mkdir=yes download_github_release)
+  release[archive]=$(mkdir=yes download_release)
 
   local -A unit=(
     [user]="$name"
@@ -115,35 +111,7 @@ install_minecraft_exporter() {
   handle_unit
 }
 
-install_quilt() {
-  install_quilt_installer
-}
-
-install_quilt_installer() {
-   local name='quilt-installer' version='latest'
-
-  declare -A release=(
-    [delimiter]='-'
-    [name]="$name"
-    [owner]='quiltmc'
-    [repository]="$name"
-    [version]="$version"
-  )
-  release[archive]=$(download_quilt_release)
-
-  declare -A unit=(
-    [user]='quilt'
-    [group]='quilt'
-  )
-  local -a dirs=(
-    '/quilt'
-  )
-  make_dirs
-
-  handle_unit
-}
-
-download_github_release() {
+download_release() {
   . <(release_source)
 
   local archive="$name$delimiter$version.linux-$architecture"
@@ -172,28 +140,6 @@ download_github_release() {
   curl -LSfs "$url" | tar xz -C "$src"
 
   printf "$archive"
-}
-
-download_quilt_release() {
-  . <(release_source)
-
-  local url="https://maven.quiltmc.org"
-
-  local archive="quilt-install-$version"
-
-  local segments=(
-    "repository"
-    "release"
-    "org"
-    "quiltmc"
-    "$name"
-    "latest"
-    "$archive.jar"
-  )
-
-  make_url
-
-  curl -LSfs "$url" > "$src/"
 }
 
 release_source() {
@@ -228,25 +174,6 @@ handle_unit() {
   systemctl daemon-reload
   systemctl start "$name"
   systemctl enable "$name"
-}
-
-handle_iptables() {
-  iptables -I INPUT -j ACCEPT
-
-  # iptables -A INPUT -p tcp -m state --state NEW --dport 25555 -j ACCEPT
-  # iptables-save
-  # dpkg-reconfigure iptables-persistent
-
-  # iptables -P INPUT DROP
-  # iptables -P OUTPUT DROP
-  # iptables -P FORWARD DROP
-}
-
-handle_sshd() {
-  sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
-  service sshd restart
-
-  systemctl restart fail2ban
 }
 
 main
