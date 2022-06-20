@@ -10,17 +10,18 @@ param tags object
 @description('The preexisting virtual network name.')
 param virtualNetwork string
 
+@description('The public key to be installed.')
+param publicKey string
+
 var vmSize = 'Standard_D2_v2'
 
 param adminUsername string
-
-param rsaPublicKey string
 
 param customData string
 
 var moduleTags = union(tags, {module: 'virtualMachine'})
 
-resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
+resource network 'Microsoft.Network/virtualNetworks@2021-05-01' existing = {
   name: virtualNetwork 
 }
 
@@ -108,7 +109,7 @@ resource nic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
         name: 'ipconfig1'
         properties: {
           subnet: {
-            id: vnet.properties.subnets[0].id
+            id: network.properties.subnets[0].id
           }
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
@@ -176,7 +177,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-07-01' = {
           publicKeys: [
             {
               path: '/home/${adminUsername}/.ssh/authorized_keys'
-              keyData: rsaPublicKey
+              keyData: publicKey
             }
           ]
         }

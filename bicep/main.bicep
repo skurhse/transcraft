@@ -63,7 +63,7 @@ module virtualMachine 'modules/virtual_machine.bicep' = {
     virtualNetwork: virtualNetwork.outputs.name
 
     adminUsername: 'minecraft'
-    rsaPublicKey: publicKey
+    publicKey: publicKey
     customData: loadFileAsBase64('../out/cloud-init.mime')
   }
 }
