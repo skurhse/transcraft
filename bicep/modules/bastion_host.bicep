@@ -46,10 +46,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' = {
     enableRbacAuthorization: true
     enableSoftDelete: false
     networkAcls: {
-      defaultAction: 'Deny'
+      defaultAction: 'Allow'
       bypass: 'AzureServices'
     }
-    publicNetworkAccess: 'disabled'
+    //publicNetworkAccess: 'disabled'
     sku: { 
       family: 'A'
       name: 'standard'
