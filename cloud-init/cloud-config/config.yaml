@@ -147,9 +147,11 @@ write_files:
       DefaultDependencies=no
       After=network.target
       [Service]
+      User=quilt
+      Group=quilt
       WorkingDirectory=/usr/local/lib/quilt
       Type=simple
-      ExecStart=/usr/bin/java -Xmx4G -Xms4G -jar server.jar nogui
+      ExecStart=/usr/bin/java -Xmx4G -Xms4G -jar quilt-server-launch.jar nogui
       Restart=on-failure
       RestartSec=5
       [Install]

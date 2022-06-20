@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# REQ: Enable port 22. <skr 2022-06>
+# REQ: Configure iptables. <skr 2022-06>
 
 set -o nounset
 set -o xtrace

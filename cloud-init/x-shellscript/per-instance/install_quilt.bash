@@ -7,14 +7,8 @@ set -o xtrace
 
 lib='/usr/local/lib/quilt'
 
-name='quilt-installer'
-version='latest'
-
-url="https://maven.quiltmc.org"
-
-archive="quilt-installer-$version.jar"
-
-minecraft_version='1.19'
+name='quilt'
+version='1.19'
 
 main() {
   download_installer
@@ -23,6 +17,10 @@ main() {
 }
 
 download_installer() {
+  local name='quilt-installer'
+  local version='latest'
+  local url="https://maven.quiltmc.org"
+  local archive="quilt-installer-$version.jar"
 
   mkdir -p "$lib"
 
@@ -44,23 +42,16 @@ download_installer() {
 }
 
 run_installer() {
-  java -jar "$lib/$archive" install server "$minecraft_version" --download-server
+  java -jar "$lib/$archive" install server "$minecraft_version" \
+    --download-server \
+    --install-dir="$lib"
+  chown -R "${unit[user]}:${unit[group]}" "$lib"
+}
+
+handle_service() {
+  systemctl daemon-reload
+  systemctl start "${unit[name]}"
+  systemctl enable "${unit[name]}"
 }
 
 main
-
-# chown -R "${unit[user]}:${unit[group]}" "$dir/$node"
-
-# handle_unit() {
-#   local name=${unit[name]}
-#   local -A unit=(
-#     [name]='quilt'
-#     [user]='quilt'
-#     [group]='quilt'
-#   )
-
-#   systemctl daemon-reload
-#   systemctl start "$name"
-#   systemctl enable "$name"
-# }
-
