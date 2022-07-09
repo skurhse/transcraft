@@ -1,5 +1,10 @@
-export RESOURCE_GROUP = transcraft
-export LOCATION = centralus
+RESOURCE_GROUP = transcraft
+LOCATION = centralus
+BASTION = bastion-d4vxd4ztxl3dk-bh
+VIRTUAL_MACHINE = transcraft-d4vxd4ztxl3dk-vm
+
+SHELL = /usr/bin/env bash
+DEBUG ?= no
 
 export SERVICE_PRINCIPAL = github_actions
 
@@ -31,4 +36,18 @@ $(OUT_DIR):
 
 .PHONY: deployment
 deployment: $(MIME_FILE)
-	make/deployment.bash
+	cd make && ./deployment.bash
+
+.PHONY: connection
+connection:
+	$(call handle_debug) \
+	cd make && \
+	source connection.bash \
+	  --bastion         $(BASTION)         \
+	  --location        $(LOCATION)        \
+	  --resource-group  $(RESOURCE_GROUP)  \
+	  --virtual-machine $(VIRTUAL_MACHINE)
+
+define handle_debug
+	$(if $(filter $(DEBUG),yes),set -o xtrace;)
+endef
