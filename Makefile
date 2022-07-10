@@ -1,6 +1,7 @@
 # NOTE: To see a list of typical targets, execute `make help` <>
 
 SHELL = /usr/bin/env bash
+OUT_DIR = out
 
 # log levels:
 LVLS = debug info warn error fatal
@@ -9,6 +10,7 @@ export LVL ?= warn
 # environments:
 ENVS = dev prod
 ENV ?= dev
+ENV_DIR = $(OUT_DIR)/$(ENV)
 
 # resource group:
 RG_NAME = tulip
@@ -23,17 +25,14 @@ VM_NAME = peony
 # service principal:
 SP_NAME = github_actions
 
-# directories:
-OUT_DIR = out
-ENV_DIR = $(OUT_DIR)/$(ENV)
-SSH_DIR = $(ENV_DIR)/ssh
-
 # ssh:
+SSH_DIR = $(ENV_DIR)/ssh
 export SSH_PRIVATE_KEY = $(SSH_DIR)/id_rsa
 export SSH_PUBLIC_KEY = $(SSH_PRIVATE_KEY).pub
 
 # cloud-init:
-export MIME_FILE = $(OUT_DIR)/cloud-init.mime
+MIME_DIR = $(ENV_DIR)/mime
+export MIME_FILE = $(MIME_DIR)/cloud-init.mime
 
 # cleaning targets:
 .PHONY: clean reset
@@ -46,17 +45,20 @@ reset: clean
 # build targets:
 .PHONY: dirs key-pair user-data
 
-dirs: $(SSH_DIR)
+dirs: $(SSH_DIR) $(MIME_DIR)
 $(SSH_DIR):
 	mkdir -p $(SSH_DIR)
+
+$(MIME_DIR):
+	mkdir -p $(MIME_DIR)
 
 key-pair: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
 $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &: $(SSH_DIR)
 	make/build/key-pair.bash -e $(ENV) -k $(SSH_PRIVATE_KEY)
 
 user-data: $(MIME_FILE)
-$(MIME_FILE): $(OUT_DIR) cloud-init/*/*
-	make/build/user-data.bash
+$(MIME_FILE): $(MIME_DIR) cloud-init/*/*
+	make/build/user-data.bash -u $(MIME_FILE)
 
 # utility targets:
 .PHONY: prereqs connection deployment
@@ -79,8 +81,8 @@ help:
 	@echo ' reset       - Remove all generated files.'
 	@echo ''
 	@echo 'Build targets:'
-	@echo '  dirs 		  - Build output directories.'
 	@echo '  all        - Build all targets per env.'
+	@echo '  dirs 		  - Build output directories.'
 	@echo '  key-pair   - Build the ssh key-pair per env.'
 	@echo '  user-data  - Build cloud-init user-data per env.'
 	@echo ''
