@@ -1,6 +1,5 @@
-# NOTE: To see a list of typical targets, execute `make help` <skr 2022-07>
+# NOTE: To see a list of typical targets, execute `make help` <>
 
-# make:
 SHELL = /usr/bin/env bash
 
 # log levels:
@@ -8,8 +7,8 @@ LVLS = DEBUG INFO WARN ERROR FATAL
 export LVL ?= WARN
 
 # environments:
-ENVS = development production
-ENV ?= development
+ENVS = dev prod
+ENV ?= dev
 
 # resource group:
 RG_NAME = tulip
@@ -26,7 +25,8 @@ SP_NAME = github_actions
 
 # directories:
 OUT_DIR = out
-SSH_DIR = $(OUT_DIR)/ssh
+ENV_DIR = $(OUT_DIR)/$(ENV)
+SSH_DIR = $(ENV_DIR)/ssh
 
 # ssh:
 export SSH_PRIVATE_KEY = $(SSH_DIR)/id_rsa
@@ -52,7 +52,7 @@ $(SSH_DIR):
 
 ssh-keys: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
 $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &:
-	make/ssh-keys.bash
+	make/ssh-keys.bash -e $(ENV) -p $(SSH_PRIVATE_KEY) -P $(SSH_PUBLIC_KEY)
 
 user-data: $(MIME_FILE)
 $(MIME_FILE): $(OUT_DIR) cloud-init/*/*
@@ -79,10 +79,10 @@ help:
 	@echo ' reset       - Remove all generated files.'
 	@echo ''
 	@echo 'Build targets:'
-	@echo '  all        - Build all targets.'
-	@echo '  dirs 		  - Build directories.'
-	@echo '  ssh-keys   - Build SSH keys.'
-	@echo '  user-data  - Build user-data.'
+	@echo '  dirs 		  - Build output directories.'
+	@echo '  all        - Build all targets per env.'
+	@echo '  ssh-keys   - Build SSH keys per env.'
+	@echo '  user-data  - Build user-data per env.'
 	@echo ''
 	@echo 'Utility targets:'
 	@echo '  prereqs    - Install prerequisites.'
