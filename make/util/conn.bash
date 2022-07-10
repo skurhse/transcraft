@@ -5,11 +5,11 @@ then
   set -o xtrace
 fi
 
-source lib/shell.bash
-source lib/options.bash
-source lib/models/resource_group.bash
-source lib/models/bastion.bash
-source lib/models/virtual_machine.bash
+source _lib/shell.bash
+source _lib/options.bash
+source _lib/models/resource_group.bash
+source _lib/models/bastion.bash
+source _lib/models/virtual_machine.bash
 
 function main {
   parse_options "$@"

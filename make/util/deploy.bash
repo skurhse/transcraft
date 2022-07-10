@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
 
-# REQ: Deploys the bicep project. <skr 2022-06>
-
-if [[ $LVL == 'debug' ]]
-then
-  set -o xtrace
-fi
+# REQ: Deploys the bicep project. <>
 
 set +o braceexpand
 set -o errexit
@@ -14,7 +9,12 @@ set -o nounset
 set -o noglob
 set -o pipefail
 
-main() {
+if [[ $LVL == 'debug' ]]
+then
+  set -o xtrace
+fi
+
+function main {
   user_id=$(get_signed_in_user_id)
 
   service_principal_id=$(get_service_principal_id)
@@ -23,11 +23,11 @@ main() {
   create_deployment
 }
 
-get_signed_in_user_id() {
+function get_signed_in_user_id {
   az ad signed-in-user show --query id -o tsv --only-show-errors
 }
 
-get_service_principal_id() {
+function get_service_principal_id {
   service_principals=$(az ad sp list --display-name "$SERVICE_PRINCIPAL") 
 
   service_principals_size=$(jq -n "$service_principals|length")
@@ -39,11 +39,11 @@ get_service_principal_id() {
   fi
 }
 
-create_resource_group() {
+function create_resource_group {
   az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
 }
 
-create_deployment() {
+function create_deployment {
   az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
     --template-file 'bicep/transcraft.bicep' \

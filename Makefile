@@ -68,29 +68,30 @@ $(MIME_FILE): $(MIME_DIR) cloud-init/*/*
 prereqs: validate_log_level
 	make/util/prereqs.bash
 
-connection: validate_log_level
-	make/util/connection.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
+conn: validate_log_level
+	make/util/conn.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
 
-deployment: validate_log_level $(MIME_FILE)
-	make/util/deployment.bash
+deploy: validate_log_level $(MIME_FILE)
+	make/util/deploy.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
 
 # miscellanous targets:
 .PHONY: help validate-log-level
 
 help:
 	@echo 'Cleaning targets:'
-	@echo ' clean       - Remove most generated files, but keep ssh keys per env.'
+	@echo ' clean       - Remove most generated files per env, but keep keyfiles.'
 	@echo ' reset       - Remove all generated files per env.'
 	@echo ''
 	@echo 'Build targets:'
 	@echo '  all        - Build all targets per env.'
 	@echo '  dirs 		  - Build output directories.'
-	@echo '  keyfiles   - Build the ssh keyfiles per env.'
-	@echo '  mimefile   - Build cloud-init mimefiles per env.'
+	@echo '  keyfiles   - Build ssh keyfiles per env.'
+	@echo '  mimefile   - Build the cloud-init mimefile per env.'
 	@echo ''
 	@echo 'Utility targets:'
 	@echo '  prereqs    - Install prerequisites.'
-	@echo '  connection - Connect to the virtual machine through a bastion ssh tunnel.'
+	@echo '  conn       - Connect to an env virtual machine thru a bastion ssh tunnel.'
+	@echo '  deploy     - Deploy an environment.'
 	@echo ''
 	@echo 'Miscellaneous targets:'
 	@echo '  help               - Display this usage text.'

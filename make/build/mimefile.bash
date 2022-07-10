@@ -20,8 +20,8 @@ realpath="$(realpath "$0")"
 dirname="$(dirname "$realpath")"
 cd "$dirname/.."
 
-source 'lib/options.bash'
-source 'lib/models/user_data.bash'
+source '_lib/options.bash'
+source '_lib/models/user_data.bash'
 
 function main {
 	parse_options "$@"

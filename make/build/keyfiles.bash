@@ -17,8 +17,8 @@ realpath="$(realpath "$0")"
 dirname="$(dirname "$realpath")"
 cd "$dirname/.."
 
-source lib/options.bash
-source lib/models/key_pair.bash
+source _lib/options.bash
+source _lib/models/key_pair.bash
 
 function main {
   parse_options "$@"
