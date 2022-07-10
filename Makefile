@@ -3,8 +3,8 @@
 SHELL = /usr/bin/env bash
 
 # log levels:
-LVLS = DEBUG INFO WARN ERROR FATAL
-export LVL ?= WARN
+LVLS = debug info warn error fatal
+export LVL ?= warn
 
 # environments:
 ENVS = dev prod
@@ -51,12 +51,12 @@ $(SSH_DIR):
 	mkdir -p $(SSH_DIR)
 
 key-pair: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
-$(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &:
-	make/key-pair.bash -e $(ENV) -p $(SSH_PRIVATE_KEY) -P $(SSH_PUBLIC_KEY)
+$(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &: $(SSH_DIR)
+	make/build/key-pair.bash -e $(ENV) -k $(SSH_PRIVATE_KEY)
 
 user-data: $(MIME_FILE)
 $(MIME_FILE): $(OUT_DIR) cloud-init/*/*
-	make/mime-file.bash
+	make/build/user-data.bash
 
 # utility targets:
 .PHONY: prereqs connection deployment

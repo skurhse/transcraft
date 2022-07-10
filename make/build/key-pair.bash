@@ -8,14 +8,14 @@ set -o noglob
 set -o nounset
 set -o pipefail
 
-if [[ $LOG_LEVEL == 'DEBUG' ]]
+if [[ $LVL == 'debug' ]]
 then
   set -o xtrace
 fi
 
 realpath="$(realpath "$0")"
 dirname="$(dirname "$realpath")"
-cd "$dirname.."
+cd "$dirname/.."
 
 source lib/options.bash
 source lib/models/key_pair.bash

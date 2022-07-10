@@ -1,19 +1,19 @@
 function make_key_pair {
   declare -Ag key_pair=(
-    [type]='rsa'
     [bits]='4096'
-    [email]='transcraft@transprogrammer.org'
+    [email]="transcraft.${options[environment]}@transprogrammer.org"
+    [file]="../${options[keyfile]}"
+    [type]='rsa'
   )
-  key_pair[file]="$SSH_PRIVATE_KEY"
 }
 
-generate_key() {
-  ssh_dir=$(dirname "${key[file]}")
+function generate_key_pair {
+  ssh_dir=$(dirname "${key_pair[file]}")
 
   ssh-keygen \
-    -C "${key[email]}" \
-    -t "${key[type]}"  \
-    -b "${key[bits]}"  \
-    -f "${key[file]}"  \
+    -C "${key_pair[email]}" \
+    -t "${key_pair[type]}"  \
+    -b "${key_pair[bits]}"  \
+    -f "${key_pair[file]}"  \
     -N ''
 }

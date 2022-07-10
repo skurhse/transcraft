@@ -1,11 +1,11 @@
 # REQ: Parses make script options. <skr 2022-07>
 
 function parse_options {
-  local opts='P:b:,e:,l:,g:,m:,p:'
+  local opts='b:,e:,k:,l:,g:,m:,p:'
   local longopts
-    longopts='private-key'
-  longopts+=',bastion:'
+    longopts='bastion:'
   longopts+=',environment:'
+  longopts+=',keyfile:'
   longopts+=',location:'
   longopts+=',resource-group:'
   longopts+=',virtual-machine:'
@@ -20,9 +20,6 @@ function parse_options {
   for ((i = 1; i <= $#; i++)); do
     (( j = i + 1 ))
     case "${!i}" in
-        -P|--public-key)
-          options[public_key]="${!j}"
-          ;;
         -b|--bastion)
           options[bastion]="${!j}"
           (( i++ ))
@@ -33,6 +30,10 @@ function parse_options {
           ;;
         -g|--resource-group)
           options[resource_group]="${!j}"
+          (( i++ ))
+          ;;
+        -k|--keyfile)
+          options[keyfile]="${!j}"
           (( i++ ))
           ;;
         -l|--location)

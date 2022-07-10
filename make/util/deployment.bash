@@ -2,7 +2,7 @@
 
 # REQ: Deploys the bicep project. <skr 2022-06>
 
-if [[ $LOG_LEVEL == 'DEBUG' ]]
+if [[ $LVL == 'debug' ]]
 then
   set -o xtrace
 fi
