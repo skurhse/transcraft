@@ -2,11 +2,41 @@
 
 # REQ: Installs utilities with homebrew. <skr 2022-06 s:inprogress>
 
-set +B -Cefuxo pipefail
+if [[ $LVL == 'DEBUG' ]]
+then
+  set -o xtrace
+fi
 
-local='/usr/local' src="$local/src" bin="$local/bin"
+set -o braceexpand
+set -o errexit
+set -o noclobber
+set -o nounset
+set -o noglob
+set -o pipefail
 
-brewfile='
+realpath="$(realpath "$0")"
+dirname="$(dirname "$realpath")"
+cd "$dirname"
+
+function main {
+  handle_brew
+  run_brew_bundle
+  
+  make_local_dirs
+  install_cloud-init
+}
+
+function handle_brew {
+  if ! hash brew 2>/dev/null
+  then
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+}
+
+run_brew_bundle() {
+  local brewfile
+
+  brewfile='
   brew "azure-cli"
   brew "bash"
   brew "dpkg"
@@ -17,23 +47,17 @@ brewfile='
   
   cask "multipass"
 '
-
-main() {
-  run_brew_bundle
-  
-  make_local_dirs
-  install_cloud-init
-}
-
-run_brew_bundle() {
   brew bundle --file=- <<<$brewfile
 }
 
-make_local_dirs() {
+function make_local_dirs {
+  local local='/usr/local'
+  declare -g src="$local/src" bin="$local/bin"
+
   sudo mkdir -p $src $bin
 }
 
-install_cloud-init() {
+function install_cloud-init {
   r_path+='."rdf:RDF"'
   r_path+='."lp:ProductSeries"'
   r_path+='."lp:release"'

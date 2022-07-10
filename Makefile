@@ -61,13 +61,13 @@ $(MIME_FILE): $(OUT_DIR) cloud-init/*/*
 # utility targets:
 .PHONY: prereqs connection deployment
 
-prereqs:
+prereqs: validate_log_level
 	make/util/prereqs.bash
 
 connection: validate_log_level
 	make/util/connection.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
 
-deployment: $(MIME_FILE)
+deployment: validate_log_level $(MIME_FILE)
 	make/util/deployment.bash
 
 # miscellanous targets:
@@ -94,10 +94,6 @@ help:
 	@echo ''
 
 validate_log_level:
-ifneq ($(filter $(LVL),$(LVLS)),)
-	$(info Log level $(LVL) is valid.)
-else
-	@echo "Log level is invalid. Valid values are: $(LVLS)"
-	@exit 1
+ifeq ($(filter $(LVL),$(LVLS)),)
 	$(error Log level $(LVL) is invalid.)
 endif
