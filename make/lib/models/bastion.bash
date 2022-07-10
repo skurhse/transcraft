@@ -15,6 +15,5 @@ function connect_to_bastion {
     --auth-type          "${bastion[auth-type]}"    \
     --name               "${bastion[name]}"         \
     --resource-group     "${resource_group[name]}"  \
-    --target-resource-id "${virtual_machine[id]}"   \
-    --debug
+    --target-resource-id "${virtual_machine[id]}"
 }
