@@ -1,5 +1,6 @@
 # NOTE: To see a list of typical targets, execute `make help` <skr 2022-07>
 
+# make:
 SHELL = /usr/bin/env bash
 
 # log levels:
@@ -11,14 +12,14 @@ ENVS = development production
 ENV ?= development
 
 # resource group:
-RG_NAME = transcraft
+RG_NAME = tulip
 RG_LOC = centralus
 
 # bastion:
-BT_NAME = bastion-d4vxd4ztxl3dk-bh
+BT_NAME = lilac
 
 # virtual machine:
-VM_NAME = transcraft-d4vxd4ztxl3dk-vm
+VM_NAME = peony
 
 # service principal:
 SP_NAME = github_actions
@@ -58,13 +59,16 @@ $(MIME_FILE): $(OUT_DIR) cloud-init/*/*
 	make/mime-file.bash
 
 # utility targets:
-.PHONY: connection deployment
+.PHONY: prereqs connection deployment
+
+prereqs:
+	make/util/prereqs.bash
 
 connection: validate_log_level
-	cd make && ./connection.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
+	make/util/connection.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
 
 deployment: $(MIME_FILE)
-	cd make && ./deployment.bash
+	make/util/deployment.bash
 
 # miscellanous targets:
 .PHONY: help validate-log-level
@@ -81,6 +85,7 @@ help:
 	@echo '  user-data  - Build user-data.'
 	@echo ''
 	@echo 'Utility targets:'
+	@echo '  prereqs    - Install prerequisites.'
 	@echo '  connection - Connect to the virtual machine through a bastion ssh tunnel.'
 	@echo ''
 	@echo 'Miscellaneous targets:'
