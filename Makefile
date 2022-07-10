@@ -37,13 +37,15 @@ export MIME_FILE = $(MIME_DIR)/cloud-init.mime
 # cleaning targets:
 .PHONY: clean reset
 clean:
-	rm -v $(MIME_FILE)
+	rm -fv $(MIME_FILE)
 
 reset: clean
-	rm -v $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY)
+	rm -fv $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY)
 
 # build targets:
-.PHONY: dirs key-pair user-data
+.PHONY: all dirs keyfiles mimefile
+
+all: dirs keyfiles mimefile
 
 dirs: $(SSH_DIR) $(MIME_DIR)
 $(SSH_DIR):
@@ -52,13 +54,13 @@ $(SSH_DIR):
 $(MIME_DIR):
 	mkdir -p $(MIME_DIR)
 
-key-pair: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
+keyfiles: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
 $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &: $(SSH_DIR)
-	make/build/key-pair.bash -e $(ENV) -k $(SSH_PRIVATE_KEY)
+	make/build/keyfiles.bash -e $(ENV) -k $(SSH_PRIVATE_KEY)
 
-user-data: $(MIME_FILE)
+mimefile: $(MIME_FILE)
 $(MIME_FILE): $(MIME_DIR) cloud-init/*/*
-	make/build/user-data.bash -u $(MIME_FILE)
+	make/build/mimefile.bash -u $(MIME_FILE)
 
 # utility targets:
 .PHONY: prereqs connection deployment
@@ -77,14 +79,14 @@ deployment: validate_log_level $(MIME_FILE)
 
 help:
 	@echo 'Cleaning targets:'
-	@echo ' clean       - Remove most generated files, but keep ssh keys.'
-	@echo ' reset       - Remove all generated files.'
+	@echo ' clean       - Remove most generated files, but keep ssh keys per env.'
+	@echo ' reset       - Remove all generated files per env.'
 	@echo ''
 	@echo 'Build targets:'
 	@echo '  all        - Build all targets per env.'
 	@echo '  dirs 		  - Build output directories.'
-	@echo '  key-pair   - Build the ssh key-pair per env.'
-	@echo '  user-data  - Build cloud-init user-data per env.'
+	@echo '  keyfiles   - Build the ssh keyfiles per env.'
+	@echo '  mimefile   - Build cloud-init mimefiles per env.'
 	@echo ''
 	@echo 'Utility targets:'
 	@echo '  prereqs    - Install prerequisites.'
