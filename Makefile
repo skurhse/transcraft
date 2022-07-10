@@ -1,16 +1,19 @@
-# NOTE: To see a list of typical targets execute `make help` <skr 2022-07>
+# NOTE: To see a list of typical targets, execute `make help` <skr 2022-07>
 
 .PHONY: help
 help:
 	@echo 'Cleaning targets:'
-	@echo ' clean   - Remove most generated files but keep the config.'
-	@echo ' reset   - Remove all generated files.'
+	@echo ' clean       - Remove most generated files, but keep the config.'
+	@echo ' reset       - Remove all generated files.'
 	@echo ''
 	@echo 'Build targets:'
-	@echo '  all    - Build all targets.'
+	@echo '  all        - Build all targets.'
+	@echo ''
+	@echo 'Utility targets:'
+	@echo '  connection - Connect to the virtual machine through a bastion ssh tunnel.'
 	@echo ''
 	@echo 'Miscellaneous targets:'
-	@echo '  help   - Display this usage text.'
+	@echo '  help       - Display this usage text.'
 	@echo ''
 
 RESOURCE_GROUP = transcraft
