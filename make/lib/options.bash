@@ -2,7 +2,7 @@
 
 function parse_options {
   local longopts='bastion:,location:,resource-group:,virtual-machine:'
-  local opts='b:,l:,g:,v:'
+  local opts='b:,l:,g:,m:'
   local parsed
   declare -Ag options
 
@@ -24,7 +24,7 @@ function parse_options {
           options[location]="${!j}"
           (( i++ ))
           ;;
-        -v|--virtual-machine)
+        -m|--virtual-machine)
           options[virtual_machine]="${!j}"
           (( i++ ))
           ;;

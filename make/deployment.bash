@@ -2,7 +2,17 @@
 
 # REQ: Deploys the bicep project. <skr 2022-06>
 
-set +B -Cefuxo pipefail
+if [[ $LOG_LEVEL == 'DEBUG' ]]
+then
+  set -o xtrace
+fi
+
+set +o braceexpand
+set -o errexit
+set -o noclobber
+set -o nounset
+set -o noglob
+set -o pipefail
 
 main() {
   user_id=$(get_signed_in_user_id)
