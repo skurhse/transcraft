@@ -6,3 +6,9 @@ function make_resource_group {
         [name]="${options[resource_group]}"
   )
 }
+
+function create_resource_group {
+  az group create \
+    --name "${resource_group[name]}" \
+    --location "${resource_group[location]}"
+}

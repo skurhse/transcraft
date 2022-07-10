@@ -14,7 +14,18 @@ then
   set -o xtrace
 fi
 
+realpath="$(realpath "$0")"
+dirname="$(dirname "$realpath")"
+cd "$dirname/.."
+
+source lib/options.bash
+
 function main {
+  parse_options "$@"
+
+  make_resource_group
+  make_deployment
+
   user_id=$(get_signed_in_user_id)
 
   service_principal_id=$(get_service_principal_id)
@@ -39,10 +50,6 @@ function get_service_principal_id {
   fi
 }
 
-function create_resource_group {
-  az group create --name "$RESOURCE_GROUP" --location "$LOCATION"
-}
-
 function create_deployment {
   az deployment group create \
     --resource-group "$RESOURCE_GROUP" \
@@ -54,4 +61,4 @@ function create_deployment {
       privateKey="$(cat "$SSH_PRIVATE_KEY")"
 }
 
-main
+main "$@"
