@@ -18,7 +18,8 @@ realpath="$(realpath "$0")"
 dirname="$(dirname "$realpath")"
 cd "$dirname/.."
 
-source lib/options.bash
+source _lib/options.bash
+source _lib/models/resource_group.bash
 
 function main {
   parse_options "$@"
@@ -26,3 +27,5 @@ function main {
   make_resource_group
   create_resource_group
 }
+
+main "$@"

@@ -36,7 +36,9 @@ SSH_KEYFILES = $(SSH_PRIVATE_KEYFILE) $(SSH_PUBLIC_KEYFILE)
 MIME_DIR = $(ENV_DIR)/mime
 export MIME_FILE = $(MIME_DIR)/cloud-init.mime
 
+# general:
 ALL_FILES = $(MIME_FILE) $(SSH_KEYFILES)
+VALIDATIONS = validate-log-level validate-environment
 
 # cleaning targets:
 .PHONY: clean reset
@@ -69,26 +71,26 @@ $(MIME_FILE): $(MIME_DIR) cloud-init/*/*
 # deployment targets:
 .PHONY: resource-group service-principal arm-deployment
 
-resource-group:
-	make/deploy/group.bash -g $(RG_NAME) -l $(RG_LOC)
+resource-group: $(VALIDATIONS)
+	make/deploy/resource-group.bash -g $(RG_NAME) -l $(RG_LOC)
 
-service-principal:
+service-principal: $(VALIDATIONS)
 	make/deploy/service.bash -g $(RG_NAME) -l $(RG_LOC)
 
-arm-deployment: validate_log_level $(ALL_FILES)
+arm-deployment: validate-log-level $(ALL_FILES)
 	make/deploy/deploy.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
 
 # utility targets:
 .PHONY: prequisites connection
 
-prequisites: validate_log_level
+prequisites: validate-log-level
 	make/util/prequisites.bash
 
-connection: validate_log_level
+connection: validate-log-level
 	make/util/connection.bash -b $(BT_NAME) -l $(RG_LOC) -g $(RG_NAME) -m $(VM_NAME)
 
 # miscellanous targets:
-.PHONY: help validate-log-level
+.PHONY: help validate-log-level validate-environment
 
 help:
 	@echo 'Clean targets:'
@@ -116,7 +118,12 @@ help:
 	@echo '  validate-environment - Validate the environment.'
 	@echo ''
 
-validate_log_level:
+validate-log-level:
 ifeq ($(filter $(LVL),$(LVLS)),)
 	$(error Log level $(LVL) is invalid.)
+endif
+
+validate-environment:
+ifeq ($(filter $(ENV),$(ENVS)),)
+	$(error Environment $(ENV) is invalid.)
 endif
