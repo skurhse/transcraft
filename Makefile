@@ -44,15 +44,15 @@ reset: clean
 	rm -v $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY)
 
 # build targets:
-.PHONY: dirs ssh-keys user-data
+.PHONY: dirs key-pair user-data
 
 dirs: $(SSH_DIR)
 $(SSH_DIR):
 	mkdir -p $(SSH_DIR)
 
-ssh-keys: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
+key-pair: $(SSH_PUBLIC_KEY) $(SSH_PRIVATE_KEY)
 $(SSH_PRIVATE_KEY) $(SSH_PUBLIC_KEY) &:
-	make/ssh-keys.bash -e $(ENV) -p $(SSH_PRIVATE_KEY) -P $(SSH_PUBLIC_KEY)
+	make/key-pair.bash -e $(ENV) -p $(SSH_PRIVATE_KEY) -P $(SSH_PUBLIC_KEY)
 
 user-data: $(MIME_FILE)
 $(MIME_FILE): $(OUT_DIR) cloud-init/*/*
@@ -81,8 +81,8 @@ help:
 	@echo 'Build targets:'
 	@echo '  dirs 		  - Build output directories.'
 	@echo '  all        - Build all targets per env.'
-	@echo '  ssh-keys   - Build SSH keys per env.'
-	@echo '  user-data  - Build user-data per env.'
+	@echo '  key-pair   - Build the ssh key-pair per env.'
+	@echo '  user-data  - Build cloud-init user-data per env.'
 	@echo ''
 	@echo 'Utility targets:'
 	@echo '  prereqs    - Install prerequisites.'
